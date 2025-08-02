@@ -1,0 +1,70 @@
+const jwt = require('jsonwebtoken');
+const passport = require('passport');
+const prisma = require('../prisma/client')
+
+exports.userLogin = (req, res, next) => {
+    console.log('Login attempt');
+
+    passport.authenticate('local', { session: false }, (err, user, info) => {
+        if (err) {
+            console.error('Passport error:', err);
+            return res.status(500).json({ message: 'Internal error', error: err });
+        }
+
+        if (!user) {
+            console.warn('Invalid credentials:', info);
+            return res.status(401).json({ message: info?.message || 'Invalid credentials' });
+        }
+
+        req.login(user, { session: false }, (loginErr) => {
+            if (loginErr) {
+                console.error('Login error:', loginErr);
+                return res.status(500).json({ message: 'Login failed', error: loginErr });
+            }
+
+            // Only sign essential data
+            const payload = {
+                id: user.id,
+                name: user.name,
+                isAdmin: user.isAdmin, // nếu có
+            };
+
+            const token = jwt.sign(payload, process.env.JWT_SECRET, { expiresIn: '1d' });
+
+            res.cookie('token', token, {
+                httpOnly: true,
+                secure: true,
+                sameSite: 'Lax',
+                maxAge: 24 * 60 * 60 * 1000, // 1 day
+            });
+
+            return res.json({ user: payload });
+        });
+    })(req, res, next);
+};
+
+exports.checkEmail = async (req, res) => {
+    const { email } = req.body;
+
+    if (!email) {
+        return res.status(400).json({ message: 'Missing email' });
+    }
+
+    const user = await prisma.user.findUnique({ where: { email } });
+
+    if (!user) {
+        return res.status(200).json({ hasRegister: false }); // Show register form
+    }
+
+    if (user && user.password === null) {
+        return res.status(200).json({ user, googleLogin: true, hasRegister: true }) //Already login google once
+    } 
+
+    return res.status(200).json({ googleLogin: false, hasRegister: true }); // Show password field
+};
+
+
+
+
+
+

@@ -1,0 +1,102 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+  output   = "../generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+//User and Host basically have a same register login - so basically they are the same - they are good to feedback or listing - but we need verification -
+//Something to verify that if they giving feedback - to proof that they were there - Grabs have the same problem with this. people giving fake feedback
+//Something to verify that they actually the host - to proof that they own the place - to proof that the address staycation is belong to that user - so we can moneytize later 
+
+model Suggestion {
+  id Int @id @default(autoincrement())
+
+  message String
+  stage   String
+
+  createdAt DateTime @default(now())
+
+  userId Int?
+  user   User? @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model User {
+  id       Int     @id @default(autoincrement())
+  name     String  @unique
+  password String?
+  email    String  @unique
+  avatar   String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  isAdmin Boolean
+
+  // Optional: Add relation if a user owns staycations or feedback
+  feedbacks   Feedback[]
+  staycations Staycation[]
+  Suggestion  Suggestion[]
+}
+
+model Feedback {
+  id Int @id @default(autoincrement())
+
+  title       String
+  description String
+
+  picture String[] // Could be a URL or file path
+  rating  Int
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  userId Int
+  user   User @relation(fields: [userId], references: [id])
+
+  staycationId Int
+  staycation   Staycation @relation(fields: [staycationId], references: [id], onDelete: Cascade)
+}
+
+//Staycation that represent an address could have 2 3 room inside. How to handle this ?
+model Staycation {
+  id Int @id @default(autoincrement())
+
+  name    String
+  address String
+  gps     Json // You can use Json for latitude/longitude or custom type
+  contact String // Can be phone, email, etc.
+  picture String[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  feedbacks Feedback[]
+  rooms     Room[]
+
+  hostId Int
+  host   User @relation(fields: [hostId], references: [id])
+}
+
+model Room {
+  id       Int    @id @default(autoincrement())
+  name     String // e.g., “Room A1”, “Deluxe Suite”
+  capacity Int // number of people it can accommodate
+
+  price   Float
+  picture String[]
+
+  isAvailable Boolean @default(true)
+
+  staycationId Int
+  staycation   Staycation @relation(fields: [staycationId], references: [id], onDelete: Cascade)
+}
