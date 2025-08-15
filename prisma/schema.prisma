@@ -71,11 +71,13 @@ model Feedback {
 model Staycation {
   id Int @id @default(autoincrement())
 
-  name    String
-  address String
-  gps     Json // You can use Json for latitude/longitude or custom type
-  contact String // Can be phone, email, etc.
-  picture String[]
+  name     String
+  type     String
+  location Json
+  contacts  Json
+  prices   Json
+  features String[]
+  images   String[] //
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt

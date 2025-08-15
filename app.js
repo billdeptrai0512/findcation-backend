@@ -19,6 +19,7 @@ app.use(express.json())
 app.use(cookieParser())
 app.use(express.urlencoded({ extended: true }));
 app.use('/assets', express.static(path.join(__dirname, 'assets')));
+app.use("/assets/staycations", express.static(path.join(__dirname, "assets/staycations")));
 
 
 
@@ -28,12 +29,14 @@ const login = require("./routes/loginRouter");
 const register = require("./routes/registerRouter")
 const auth = require("./routes/authRouter")
 const suggestion = require("./routes/suggestionRouter")
+const listing = require("./routes/listingRouter")
 
 app.use("", map)
 app.use("/auth", auth)
 app.use("/login", login);
 app.use("/register", register)
 app.use("/suggestion", suggestion)
+app.use("/listing", listing)
 
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => console.log(`Express app listening on port ${PORT}!`));
