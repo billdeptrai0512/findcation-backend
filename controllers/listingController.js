@@ -19,8 +19,8 @@ exports.newListing = [
       const listing = JSON.parse(req.body.listing);
       const hostId = req.body.hostId;
 
-      const URL = process.env.DB_URL || "http://localhost:3000";
-      const savedImages = req.files.map(file => `${URL}/assets/staycations/${file.filename}`);
+      // const URL = process.env.DB_URL || "http://localhost:3000"; we call backend url with file name on front end so save only name and path is fine
+      const savedImages = req.files.map(file => `/assets/staycations/${file.filename}`);
       listing.images = savedImages;
 
       const newStaycation = await prisma.staycation.create({
@@ -29,6 +29,8 @@ exports.newListing = [
           hostId: parseInt(hostId, 10)
         }
       });
+
+      console.log("New staycation created:", newStaycation);
 
       res.status(201).json(newStaycation);
     } catch (error) {
@@ -44,7 +46,7 @@ exports.allListing = async (req, res, next) => {
     try {
       const allStaycation = await prisma.staycation.findMany();
 
-      console.log(allStaycation)
+      console.log(allStaycation.length)
   
       res.status(200).json(allStaycation);
     } catch (error) {

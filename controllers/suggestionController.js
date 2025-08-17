@@ -15,6 +15,8 @@ exports.allSuggestion = async (req, res, next) => {
       }
     });
 
+    
+
     res.status(200).json(allSuggestion);
   } catch (error) {
     next(error); // let your error middleware handle it
@@ -29,7 +31,7 @@ exports.newSuggestion = async (req, res, next) => {
         const userId = user.id;
 
         if (!message || !userId) {
-        return res.status(400).json({ error: "Missing message or user" });
+          return res.status(400).json({ error: "Missing message or user" });
         }
 
         const newSuggestion = await prisma.suggestion.create({
@@ -46,4 +48,4 @@ exports.newSuggestion = async (req, res, next) => {
     } catch (error) {
         next(error);
     }
-    };
+  };
