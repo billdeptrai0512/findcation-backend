@@ -1,11 +1,12 @@
 const express = require('express');
 const listingRouter = express.Router()
 const listingController = require("../controllers/listingController")
+const jwtAuth = require("../middleware/jwtAuth");
 
-listingRouter.post("/create-new", listingController.newListing);
+
+listingRouter.post("/create-new", jwtAuth, listingController.newListing);
 listingRouter.get("/all-listing", listingController.allListing);
-listingRouter.get("/one-listing/:staycationId", listingController.allListing);
-//get all listing 
+listingRouter.get("/staycation/:staycationId", listingController.oneListing);
 
 
 

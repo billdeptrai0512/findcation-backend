@@ -22,6 +22,8 @@ exports.userLogin = (req, res, next) => {
                 return res.status(500).json({ message: 'Login failed', error: loginErr });
             }
 
+            req.user = user
+
             // Only sign essential data
             const payload = {
                 id: user.id,
@@ -41,6 +43,25 @@ exports.userLogin = (req, res, next) => {
             return res.json({ user: payload });
         });
     })(req, res, next);
+};
+
+// --- VERIFY AUTH (for frontend to check login status) ---
+exports.verifyAuth = (req, res) => {
+    const token = req.cookies?.token;
+    if (!token) return res.sendStatus(401);
+  
+    try {
+      const user = jwt.verify(token, process.env.JWT_SECRET);
+      res.json({ user });
+    } catch {
+      res.sendStatus(401);
+    }
+  };
+  
+  // --- LOGOUT ---
+exports.userLogout = (req, res) => {
+    res.clearCookie("token");
+    res.sendStatus(200);
 };
 
 exports.checkEmail = async (req, res) => {

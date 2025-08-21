@@ -2,6 +2,7 @@ const prisma = require('../prisma/client')
 const multer = require("multer")
 const path = require("path")
 
+
 const storage = multer.diskStorage({
   destination: "./assets/staycations",
   filename: (req, file, cb) => {
@@ -56,6 +57,25 @@ exports.allListing = async (req, res, next) => {
 };
 
 exports.oneListing = async (req, res, next) => {
+
+  const { staycationId } = req.params;
+
+  console.log(staycationId)
+
+  try {
+    const staycation = await prisma.staycation.findUnique({
+      where: { id: parseInt(staycationId, 10) },
+    });
+
+    if (!staycation) {
+      return res.status(404).json({ message: "Listing not found" });
+    }
+
+    res.status(200).json(staycation);
+  } catch (error) {
+    console.error("Error fetching listing:", error);
+    next(error); // let your error middleware handle it
+  }
 
 }
 

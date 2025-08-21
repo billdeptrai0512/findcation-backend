@@ -5,30 +5,28 @@ const bcrypt = require('bcryptjs');
 const prisma = require('./prisma/client'); // ✅ Your Prisma client instance
 
 // LocalStrategy - login
-passport.use(new LocalStrategy({
-    usernameField: 'email',
-    passwordField: 'password',
-}, async (email, password, done) => {
-    try {
-        
-        const user = await prisma.user.findUnique({ where: { email } });
+passport.use(new LocalStrategy({ usernameField: 'email', passwordField: 'password'}
+    , async (email, password, done) => {
+        try {
+            
+            const user = await prisma.user.findUnique({ where: { email } });
 
-        console.log(user)
-        
-        if (!user) {
-            return done(null, false, { message: 'Email chưa đăng ký' });
+            console.log(user)
+            
+            if (!user) {
+                return done(null, false, { message: 'Email chưa đăng ký' });
+            }
+
+            const isMatch = await bcrypt.compare(password, user.password);
+
+            if (!isMatch) {
+                return done(null, false, { message: 'Sai mật khẩu' });
+            }
+
+            return done(null, user); // Login thành công
+        } catch (err) {
+            return done(err);
         }
-
-        const isMatch = await bcrypt.compare(password, user.password);
-
-        if (!isMatch) {
-            return done(null, false, { message: 'Sai mật khẩu' });
-        }
-
-        return done(null, user); // Login thành công
-    } catch (err) {
-        return done(err);
-    }
 }));
 
 // // JWT strategy
