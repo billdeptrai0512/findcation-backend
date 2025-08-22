@@ -205,7 +205,7 @@ exports.zaloCallback = async (req, res, next) => {
     // Step 5: link with your app’s user
     await prisma.user.update({
       where: { id: parseInt(userId) },
-      data: { zaloUid: zaloUser.id, zaloName: zaloUser.name },
+      data: { zaloUId: zaloUser.id, zaloName: zaloUser.name },
     });
 
     //update status on front page
