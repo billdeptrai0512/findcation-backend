@@ -164,8 +164,6 @@ exports.zaloCallback = async (req, res, next) => {
   
   const { code, state } = req.query; // state = userId
   const redirectAfter = req.cookies.redirect_after_login || "http://localhost:5173";
-  console.log(req.query)
-  console.log(code, state)
 
   try {
     // Step 3: exchange code + code_verifier for access_token
@@ -184,6 +182,8 @@ exports.zaloCallback = async (req, res, next) => {
       qs.toString(),
       { headers: { "Content-Type": "application/x-www-form-urlencoded" } }
     );
+
+    console.log("tokenRes.data:", tokenRes.data);
 
     const accessToken = tokenRes.data.access_token;
 
@@ -205,9 +205,8 @@ exports.zaloCallback = async (req, res, next) => {
     });
 
     //update status on front page
-        res.redirect(
-      `${redirectAfter}?zalo_id=${zaloUser.id}&name=${encodeURIComponent(zaloUser.name)}`
-    );
+    res.redirect(`${redirectAfter}?zalo_id=${zaloUser.id}&name=${encodeURIComponent(zaloUser.name)}`);
+
   } catch (err) {
     console.error(err.response?.data || err.message);
     res.status(400).json({ error: "Failed to link Zalo" });
