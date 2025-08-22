@@ -171,16 +171,15 @@ exports.zaloCallback = async (req, res, next) => {
 
     const qs = new URLSearchParams({
       app_id: process.env.ZALO_APP_ID,
-      app_secret: process.env.ZALO_APP_SECRET,
+      grant_type: "authorization_code",
       code,
-      redirect_uri: process.env.ZALO_REDIRECT_URI,
       code_verifier: codeVerifier,
     });
 
     const tokenRes = await axios.post(
       "https://oauth.zaloapp.com/v4/access_token",
       qs.toString(),
-      { headers: { "Content-Type": "application/x-www-form-urlencoded" } }
+      { headers: { "Content-Type": "application/x-www-form-urlencoded", "secret_key" : process.env.ZALO_APP_SECRET}}
     );
 
     console.log("tokenRes.data:", tokenRes.data);
