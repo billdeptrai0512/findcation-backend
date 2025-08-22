@@ -1,4 +1,4 @@
-// app.js
+﻿// app.js
 require('dotenv').config();
 require('./passport');
 const express = require("express");
@@ -51,6 +51,6 @@ app.use("/suggestion", suggestion)
 app.use("/listing", listing)
 app.use("/geojson", geojson)
 
-const PORT = process.env.PORT || 3000;
+const PORT = process.env.PORT || 3333;
 app.listen(PORT, () => console.log(`Express app listening on port ${PORT}!`));
 
