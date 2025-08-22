@@ -32,11 +32,6 @@ const suggestion = require("./routes/suggestionRouter")
 const listing = require("./routes/listingRouter")
 const geojson = require("./routes/geojsonRouter")
 
-app.get('/auth/zalo/callback', (req, res) => {
-  res.send('Zalo callback reached. Code=' + req.query.code);
-});
-
-
 app.use("", map)
 app.use("/auth", auth)
 app.use("/login", login);

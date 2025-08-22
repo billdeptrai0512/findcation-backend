@@ -121,7 +121,10 @@ exports.userConnectZalo = async (req, res, next) => {
       process.env.ZALO_REDIRECT_URI
     )}&state=${state}&code_challenge=${codeChallenge}&code_challenge_method=S256`;
 
+    console.log("authURL generated:", authURL);
+
     res.redirect(authURL);
+    
   } catch (err) {
     next(err);
   }
