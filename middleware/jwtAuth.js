@@ -3,8 +3,10 @@ const jwt = require("jsonwebtoken");
 
 function jwtAuth(req, res, next) {
   const authHeader = req.headers.authorization;
+  console.log("JWT Auth Middleware - Checking Authorization Header:", authHeader);
   const token = authHeader?.split(" ")[1] || req.cookies.token; // ✅ check cookie too
-  
+  console.log("JWT Auth Middleware - Extracted Token:", token);
+
   if (!token) return res.sendStatus(401);
 
   try {

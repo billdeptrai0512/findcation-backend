@@ -106,7 +106,7 @@ exports.userConnectZalo = async (req, res, next) => {
   try {
 
     const userId = req.user.id; // hoặc lấy từ JWT/session
-
+    console.log(userId)
     // Step 1: create verifier + challenge
     const codeVerifier = generateCodeVerifier();
     const codeChallenge = generateCodeChallenge(codeVerifier);
