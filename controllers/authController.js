@@ -4,7 +4,7 @@ const axios = require("axios");
 const passport = require('passport');
 const { OAuth2Client } = require('google-auth-library');
 const client = new OAuth2Client(process.env.OAUTH_CLIENT_ID);
-const { generateCodeVerifier, generateCodeChallenge, createZaloState, parseZaloState} = require("../utils/pkce.js") ;
+const { generateCodeVerifier, generateCodeChallenge, createZaloState, parseZaloState, generateAppSecretProof} = require("../utils/pkce.js") ;
 
 
 exports.userLogin = (req, res, next) => {
@@ -188,9 +188,11 @@ exports.zaloCallback = async (req, res, next) => {
 
     console.log("accessToken" + accessToken)
 
+    const appSecretProof = generateAppSecretProof(accessToken, process.env.ZALO_APP_SECRET);
+
     // Step 4: get Zalo profile
     const profileRes = await axios.get("https://graph.zalo.me/v2.0/me", {
-      params: { access_token: accessToken, fields: "id,name,picture" },
+      params: { access_token: accessToken, appsecret_proof: appSecretProof, fields: "id,name,picture" },
     });
 
     console.log("profileRes.data:", profileRes.data);

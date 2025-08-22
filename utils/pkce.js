@@ -14,6 +14,16 @@ function generateCodeChallenge(verifier) {
     .replace(/\//g, "_");
 }
 
+// $appsecret_proof= hash_hmac('sha256', $access_token, $app_secret_key); 
+function generateAppSecretProof(token, secret_key) {
+    const hmac = crypto.createHmac("sha256", secret_key).update(token).digest();
+    return hmac
+      .toString("base64")
+      .replace(/=/g, "")
+      .replace(/\+/g, "-")
+      .replace(/\//g, "_");
+}
+
 function createZaloState(userId, codeVerifier) {
     return jwt.sign(
       { userId, codeVerifier },
@@ -25,6 +35,7 @@ function createZaloState(userId, codeVerifier) {
 function parseZaloState(token) {
     return jwt.verify(token, process.env.ZALO_APP_SECRET);
 };
+
   
 
-module.exports = { generateCodeVerifier, generateCodeChallenge, createZaloState, parseZaloState };
+module.exports = { generateCodeVerifier, generateCodeChallenge, createZaloState, parseZaloState, generateAppSecretProof };
