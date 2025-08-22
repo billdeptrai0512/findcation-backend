@@ -143,8 +143,6 @@ exports.userConnectZalo = async (req, res, next) => {
 
     res.cookie("redirect_after_login", redirect, { httpOnly: true });
 
-    console.log("redirect to " + process.env.ZALO_REDIRECT_URI)
-
     // Step 2: redirect tới Zalo login
     const authURL = `https://oauth.zaloapp.com/v4/permission?app_id=${process.env.ZALO_APP_ID}&redirect_uri=${encodeURIComponent(
       process.env.ZALO_REDIRECT_URI
@@ -161,6 +159,7 @@ exports.userConnectZalo = async (req, res, next) => {
 
 exports.zaloCallback = async (req, res, next) => {
 
+  console.log("query" + req.query)
   const { code, state } = req.query; // state = userId
   const redirectAfter = req.cookies.redirect_after_login || "http://localhost:3000";
   console.log("code" + code)
