@@ -109,6 +109,7 @@ exports.userConnectZalo = async (req, res, next) => {
   try {
 
     const userId = req.user.id; // hoặc lấy từ JWT/session
+    console.log("userId:", userId);
     // Step 1: create verifier + challenge
     const codeVerifier = generateCodeVerifier();
     const codeChallenge = generateCodeChallenge(codeVerifier);
@@ -119,6 +120,8 @@ exports.userConnectZalo = async (req, res, next) => {
     console.log(state)
 
     res.cookie("redirect_after_login", redirect, { httpOnly: true });
+
+    console.log(process.env.ZALO_REDIRECT_URI)
 
     // Step 2: redirect tới Zalo login
     const authURL = `https://oauth.zaloapp.com/v4/permission?app_id=${process.env.ZALO_APP_ID}&redirect_uri=${encodeURIComponent(
