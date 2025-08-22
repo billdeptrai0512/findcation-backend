@@ -159,11 +159,10 @@ exports.userConnectZalo = async (req, res, next) => {
 
 exports.zaloCallback = async (req, res, next) => {
 
-  console.log("query" + req.query)
+  console.log(req.query)
   const { code, state } = req.query; // state = userId
   const redirectAfter = req.cookies.redirect_after_login || "http://localhost:3000";
-  console.log("code" + code)
-  console.log("state" + state)
+
 
   try {
     // Step 3: exchange code + code_verifier for access_token
