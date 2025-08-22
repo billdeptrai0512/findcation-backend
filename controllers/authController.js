@@ -103,10 +103,12 @@ const {   generateCodeVerifier,
   parseZaloState, } = require("../utils/pkce.js") ;
 
 exports.userConnectZalo = async (req, res, next) => {
+
+  const { redirect } = req.query;
+
   try {
 
     const userId = req.user.id; // hoặc lấy từ JWT/session
-    console.log(userId)
     // Step 1: create verifier + challenge
     const codeVerifier = generateCodeVerifier();
     const codeChallenge = generateCodeChallenge(codeVerifier);
@@ -116,6 +118,8 @@ exports.userConnectZalo = async (req, res, next) => {
     console.log(codeVerifier, codeChallenge)
     console.log(state)
 
+    res.cookie("redirect_after_login", redirect, { httpOnly: true });
+
     // Step 2: redirect tới Zalo login
     const authURL = `https://oauth.zaloapp.com/v4/permission?app_id=${process.env.ZALO_APP_ID}&redirect_uri=${encodeURIComponent(
       process.env.ZALO_REDIRECT_URI
@@ -124,15 +128,16 @@ exports.userConnectZalo = async (req, res, next) => {
     console.log("authURL generated:", authURL);
 
     res.redirect(authURL);
-    
+
   } catch (err) {
     next(err);
   }
 }
 
 exports.zaloCallback = async (req, res, next) => {
-  const { code, state } = req.query; // state = userId
 
+  const { code, state } = req.query; // state = userId
+  const redirectAfter = req.cookies.redirect_after_login || "http://localhost:3000";
   console.log(code, state)
 
   try {
@@ -167,7 +172,7 @@ exports.zaloCallback = async (req, res, next) => {
 
     //update status on front page
         res.redirect(
-      `${redirectAfter}?fb_id=${zaloUser.id}&name=${encodeURIComponent(zaloUser.name)}`
+      `${redirectAfter}?zalo_id=${zaloUser.id}&name=${encodeURIComponent(zaloUser.name)}`
     );
   } catch (err) {
     console.error(err.response?.data || err.message);
