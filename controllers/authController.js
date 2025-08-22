@@ -121,7 +121,7 @@ exports.userConnectZalo = async (req, res, next) => {
 
     res.cookie("redirect_after_login", redirect, { httpOnly: true });
 
-    console.log(process.env.ZALO_REDIRECT_URI)
+    console.log("redirect to " + process.env.ZALO_REDIRECT_URI)
 
     // Step 2: redirect tới Zalo login
     const authURL = `https://oauth.zaloapp.com/v4/permission?app_id=${process.env.ZALO_APP_ID}&redirect_uri=${encodeURIComponent(
@@ -141,7 +141,8 @@ exports.zaloCallback = async (req, res, next) => {
 
   const { code, state } = req.query; // state = userId
   const redirectAfter = req.cookies.redirect_after_login || "http://localhost:3000";
-  console.log(code, state)
+  console.log("code" + code)
+  console.log("state" + state)
 
   try {
     // Step 3: exchange code + code_verifier for access_token
@@ -164,6 +165,8 @@ exports.zaloCallback = async (req, res, next) => {
     const profileRes = await axios.get("https://graph.zalo.me/v2.0/me", {
       params: { access_token: accessToken, fields: "id,name,picture" },
     });
+
+    console.log("profileRes.data:", profileRes.data);
 
     const zaloUser = profileRes.data;
 
