@@ -141,7 +141,7 @@ exports.userConnectZalo = async (req, res, next) => {
 
     const state = createZaloState(userId, codeVerifier)
 
-    // res.cookie("redirect_after_login", redirect, { httpOnly: true });
+    res.cookie("redirect_after_login", redirect, { httpOnly: true });
 
     // Step 2: redirect tới Zalo login
     const authURL = `https://oauth.zaloapp.com/v4/permission?app_id=${process.env.ZALO_APP_ID}&redirect_uri=${encodeURIComponent(
