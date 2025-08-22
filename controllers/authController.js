@@ -194,7 +194,7 @@ exports.zaloCallback = async (req, res, next) => {
     const profileRes = await axios.get("https://graph.zalo.me/v2.0/me?fields=id,name,picture", {
       headers: {
         access_token: accessToken,
-        appsecret_proof: appSecretProof
+        // appsecret_proof: appSecretProof
       }
     });
 
