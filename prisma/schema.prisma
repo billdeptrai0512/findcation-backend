@@ -32,7 +32,7 @@ model Suggestion {
 
 model User {
   id       Int     @id @default(autoincrement())
-  name     String  @unique
+  name     String 
   password String?
   email    String  @unique
   avatar   String?

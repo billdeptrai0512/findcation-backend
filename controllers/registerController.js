@@ -32,12 +32,14 @@ exports.userRegister = async (req, res, next) => {
 
         const token = jwt.sign(payload, process.env.JWT_SECRET, { expiresIn: '1d' });
 
-        res.cookie('token', token, {
+        
+        res.cookie("token", token, {
             httpOnly: true,
-            secure: true,
-            sameSite: 'Lax',
-            maxAge: 24 * 60 * 60 * 1000, // 1 day
+            secure: process.env.NODE_ENV === "production",
+            sameSite: process.env.NODE_ENV === "production" ? "None" : "Lax",
+            maxAge: 24 * 60 * 60 * 1000,
         });
+
 
         return res.json({ user: payload });
 

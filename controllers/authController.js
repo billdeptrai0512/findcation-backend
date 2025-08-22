@@ -148,15 +148,18 @@ exports.zaloCallback = async (req, res, next) => {
     // Step 3: exchange code + code_verifier for access_token
     const { userId, codeVerifier } = parseZaloState(state);
 
+    const qs = new URLSearchParams({
+      app_id: process.env.ZALO_APP_ID,
+      app_secret: process.env.ZALO_APP_SECRET,
+      code,
+      redirect_uri: process.env.ZALO_REDIRECT_URI,
+      code_verifier: codeVerifier,
+    });
+
     const tokenRes = await axios.post(
       "https://oauth.zaloapp.com/v4/access_token",
-      {
-        app_id: process.env.ZALO_APP_ID,
-        app_secret: process.env.ZALO_APP_SECRET,
-        code,
-        redirect_uri: process.env.ZALO_REDIRECT_URI,
-        code_verifier: codeVerifier,
-      }
+      qs.toString(),
+      { headers: { "Content-Type": "application/x-www-form-urlencoded" } }
     );
 
     const accessToken = tokenRes.data.access_token;
