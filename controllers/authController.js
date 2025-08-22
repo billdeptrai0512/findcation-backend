@@ -163,7 +163,9 @@ exports.zaloCallback = async (req, res, next) => {
     });
 
     //update status on front page
-    res.redirect("http://localhost:5173/profile?linked=zalo");
+        res.redirect(
+      `${redirectAfter}?fb_id=${zaloUser.id}&name=${encodeURIComponent(zaloUser.name)}`
+    );
   } catch (err) {
     console.error(err.response?.data || err.message);
     res.status(400).json({ error: "Failed to link Zalo" });

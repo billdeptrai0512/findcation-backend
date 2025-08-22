@@ -21,6 +21,12 @@ app.use('/assets/avatar', express.static(path.join(__dirname, 'assets/avatar')))
 app.use("/assets/staycations", express.static(path.join(__dirname, "assets/staycations")));
 app.use("/assets/geo", express.static(path.join(__dirname, "assets/geo")));
 
+res.cookie("token", jwtToken, {
+  httpOnly: true,
+  secure: true,       // must be true on HTTPS
+  sameSite: "None",   // allow cross-origin
+});
+
 // Routers
 const map = require("./routes/mapRouter")
 
