@@ -191,8 +191,11 @@ exports.zaloCallback = async (req, res, next) => {
     const appSecretProof = generateAppSecretProof(accessToken, process.env.ZALO_APP_SECRET);
 
     // Step 4: get Zalo profile
-    const profileRes = await axios.get("https://graph.zalo.me/v2.0/me", {
-      params: { access_token: accessToken, appsecret_proof: appSecretProof, fields: "id,name,picture" },
+    const profileRes = await axios.get("https://graph.zalo.me/v2.0/me?fields=id,name,picture", {
+      headers: {
+        access_token: accessToken,
+        appsecret_proof: appSecretProof
+      }
     });
 
     console.log("profileRes.data:", profileRes.data);
