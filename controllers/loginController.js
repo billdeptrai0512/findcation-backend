@@ -37,13 +37,12 @@ exports.userLogin = (req, res, next) => {
 
             res.cookie('token', token, {
                 httpOnly: true,
-                secure: false, // set to true if use https
-                sameSite: 'Lax',
+                secure: true, // set to true if use https
+                sameSite: 'None',
                 maxAge: 24 * 60 * 60 * 1000, // 1 day
-            });
+            })
 
-            console.log(">>> Sending cookie:", res.getHeaders()["set-cookie"]);
-
+            console.log('Cookie set successfully');
             return res.json({ user: payload });
         });
     })(req, res, next);
