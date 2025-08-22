@@ -163,7 +163,7 @@ exports.zaloCallback = async (req, res, next) => {
 
   
   const { code, state } = req.query; // state = userId
-  const redirectAfter = req.cookies.redirect_after_login || "http://localhost:3000";
+  const redirectAfter = req.cookies.redirect_after_login || "http://localhost:5173";
   console.log(req.query)
   console.log(code, state)
 
