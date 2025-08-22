@@ -38,8 +38,7 @@ exports.userLogin = (req, res, next) => {
             res.cookie('token', token, {
                 httpOnly: true,
                 secure: false, // set to true if use https
-                sameSite: 'None',
-                domain: ".findcation.vn",
+                sameSite: 'Lax',
                 maxAge: 24 * 60 * 60 * 1000, // 1 day
             });
 
