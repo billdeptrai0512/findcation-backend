@@ -33,10 +33,13 @@ exports.userLogin = (req, res, next) => {
 
             const token = jwt.sign(payload, process.env.JWT_SECRET, { expiresIn: '1d' });
 
+            console.log('Login successful, token generated:', token);
+
             res.cookie('token', token, {
                 httpOnly: true,
                 secure: false, // set to true if use https
                 sameSite: 'None',
+                domain: ".findcation.vn",
                 maxAge: 24 * 60 * 60 * 1000, // 1 day
             });
 
