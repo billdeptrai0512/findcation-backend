@@ -103,11 +103,11 @@ exports.userRegisterGoogleAuth = async (req, res, next) => {
             expiresIn: '1d',
         });
 
-        res.cookie('token', token, {
+        res.cookie("token", token, {
             httpOnly: true,
-            secure: true,
-            sameSite: 'Lax',
-            maxAge: 86400000, // 1 day
+            secure: process.env.NODE_ENV === "production",
+            sameSite: process.env.NODE_ENV === "production" ? "None" : "Lax",
+            maxAge: 24 * 60 * 60 * 1000,
         });
 
         return res.json({ user: payloadUser });
