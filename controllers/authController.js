@@ -1,106 +1,131 @@
 const jwt = require("jsonwebtoken");
-const bcrypt = require('bcryptjs')
 const prisma = require('../prisma/client')
 const axios = require("axios");
-const sendResetEmail = require("../utils/sendEmail");
+const passport = require('passport');
+const { OAuth2Client } = require('google-auth-library');
+const client = new OAuth2Client(process.env.OAUTH_CLIENT_ID);
+const { generateCodeVerifier, generateCodeChallenge, createZaloState, parseZaloState} = require("../utils/pkce.js") ;
 
-const otpStore = new Map(); // key: email, value: { code, token, expiresAt }
 
-function generate6DigitCode() {
-  return Math.floor(100000 + Math.random() * 900000).toString(); // e.g., 123456
-}
+exports.userLogin = (req, res, next) => {
+  console.log('Login attempt');
 
-exports.verifyAuth = async (req, res) => {
-  const token = req.cookies?.token;
-  if (!token) return res.sendStatus(401);
-
-  try {
-    const user = jwt.verify(token, process.env.JWT_SECRET);
-    res.json({ user });
-  } catch {
-    res.sendStatus(401);
-  }
-};
-
-exports.verifyEmail = async (req, res) => {
-
-  const { email } = req.body;
-
-  const user = await prisma.user.findUnique({ where: { email } });
-  if (!user) return res.status(404).json({ message: "Email not found" });
-
-  const token = jwt.sign({ id: user.id }, process.env.JWT_SECRET, { expiresIn: "15m" });
-  const code = generate6DigitCode();
-  const expiresAt = Date.now() + 5 * 60 * 1000;
-
-  otpStore.set(email, { code, token, expiresAt });
-
-  await sendResetEmail(email, code); // only send the 6-digit code
-  console.log(code)
-  res.json({ message: "Reset code sent to email"});
-  
-};
-
-exports.verifyPinCode = async (req, res) => {
-  const { email, code } = req.body;
-
-  const entry = otpStore.get(email);
-  if (!entry) return res.status(400).json({ message: "No reset requested" });
-
-  if (entry.expiresAt < Date.now()) {
-    otpStore.delete(email);
-    return res.status(400).json({ message: "Code expired" });
-  }
-
-  if (entry.code !== code) {
-    return res.status(400).json({ message: "Incorrect code" });
-  }
-
-  // success: send token so frontend can redirect
-  const token = entry.token;
-  otpStore.delete(email);
-  res.json({ token });
-};
-
-exports.updatePassword = async (req, res) => {
-  const { token, password } = req.body;
-
-  try {
-
-    const decoded = jwt.verify(token, process.env.JWT_SECRET);
-    const userId = decoded.id;
-    const user = await prisma.user.findUnique({ where: { id: userId } });
-
-    if (!user) {
-      console.log("User not found in DB");
-      return res.status(404).json({ message: "User not found" });
+  passport.authenticate('local', { session: false }, (err, user, info) => {
+    console.log("Inside passport.authenticate callback");
+    if (err) {
+      console.error('Passport error:', err);
+      return res.status(500).json({ message: 'Internal error', error: err });
     }
 
-    const hashedPassword = await bcrypt.hash(password, 10);
-    await prisma.user.update({
-      where: { id: userId },
-      data: { password: hashedPassword }
+    if (!user) {
+      console.warn('Invalid credentials:', info);
+      return res.status(401).json({ message: info?.message || 'Invalid credentials' });
+    }
+
+    console.log("User found:", user);
+
+    req.login(user, { session: false }, (loginErr) => {
+      console.log("Inside req.login callback");
+      if (loginErr) {
+        console.error('Login error:', loginErr);
+        return res.status(500).json({ message: 'Login failed', error: loginErr });
+      }
+
+      console.log("req.user after login:", req.user);
+
+      // sign token & set cookie
+      const payload = { id: user.id, name: user.name, isAdmin: user.isAdmin };
+
+      const token = jwt.sign(payload, process.env.JWT_SECRET, { expiresIn: '1d' });
+
+      res.cookie('token', token, {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === "production",
+        sameSite: process.env.NODE_ENV === "production" ? "None" : "Lax",
+        maxAge: 24 * 60 * 60 * 1000,
+      });
+
+      console.log('Cookie set successfully');
+
+      return res.json({ user: payload });
     });
-
-    const jwtToken = jwt.sign({ id: user.id }, process.env.JWT_SECRET, { expiresIn: "1h" });
-
-    return res.json({ user: { id: user.id }, token: jwtToken });
-
-  } catch (err) {
-    console.error("Error during password reset:", err.name, err.message);
-    return res.status(401).json({ message: "Invalid or expired token" });
-  }
+  })(req, res, next);
 };
 
-exports.userLogout = (req, res, next) => {
-  res.clearCookie('token');
-  res.sendStatus(200);;
+exports.userLoginGoogle = async (req, res, next) => {
+    const { credential } = req.body;
+
+    try {
+        const ticket = await client.verifyIdToken({
+            idToken: credential,
+            audience: process.env.OAUTH_CLIENT_ID,
+        });
+
+        const payload = ticket.getPayload();
+        const { sub, email, name, picture } = payload;
+
+        // Check if user already exists
+        let user = await prisma.user.findUnique({
+            where: { email },
+        });
+
+        // If not, create new user
+        if (!user) {
+            // Define local avatar path
+            const avatarFileName = `${sub}.jpg`;
+            const avatarRelativePath = `/avatar/${avatarFileName}`;
+            const avatarFullPath = path.join(__dirname, '..', 'assets', 'avatar', avatarFileName);
+
+            // Download and save avatar
+            try {
+                const response = await axios.get(picture, { responseType: 'arraybuffer' });
+                fs.writeFileSync(avatarFullPath, response.data);
+            } catch (e) {
+                console.error('❌ Failed to download Google avatar:', e.message);
+            }
+
+            // Create user with local avatar path
+            user = await prisma.user.create({
+                data: {
+                    name,
+                    email,
+                    isAdmin: false,
+                    avatar: avatarRelativePath, // You can prefix this on frontend with your Imgix URL
+                },
+            });
+        }
+
+        const payloadUser = {
+            id: user.id,
+            name: user.name,
+            avatar: user.avatar,
+            isAdmin: user.isAdmin,
+        };
+
+        const token = jwt.sign(payloadUser, process.env.JWT_SECRET, {
+            expiresIn: '1d',
+        });
+
+        res.cookie("token", token, {
+            httpOnly: true,
+            secure: process.env.NODE_ENV === "production",
+            sameSite: process.env.NODE_ENV === "production" ? "None" : "Lax",
+            maxAge: 24 * 60 * 60 * 1000,
+        });
+
+        return res.json({ user: payloadUser });
+
+    } catch (error) {
+        console.error('Google auth error:', error);
+        res.status(401).json({ message: 'Invalid Google token' });
+    }
 };
 
-const {   generateCodeVerifier,
-  generateCodeChallenge,
-  createZaloState,
-  parseZaloState, } = require("../utils/pkce.js") ;
+exports.userLogout = (req, res) => {
+  res.clearCookie("token");
+  res.sendStatus(200);
+};
+
 
 exports.userConnectZalo = async (req, res, next) => {
 
@@ -114,10 +139,7 @@ exports.userConnectZalo = async (req, res, next) => {
     const codeVerifier = generateCodeVerifier();
     const codeChallenge = generateCodeChallenge(codeVerifier);
 
-    const state = createZaloState(userId, codeVerifier);
-
-    console.log(codeVerifier, codeChallenge)
-    console.log(state)
+    const state = createZaloState(userId, codeVerifier)
 
     res.cookie("redirect_after_login", redirect, { httpOnly: true });
 
@@ -130,7 +152,7 @@ exports.userConnectZalo = async (req, res, next) => {
 
     console.log("authURL generated:", authURL);
 
-    res.redirect(authURL);
+    return res.redirect(authURL);
 
   } catch (err) {
     next(err);
@@ -257,7 +279,6 @@ exports.facebookCallback = async (req, res, next) => {
     res.status(500).send("Failed to link Facebook");
   }
 }
-
 
 exports.userConnectInstagram = async (req, res, next) => {
   const { redirect } = req.query;

@@ -25,7 +25,6 @@ app.use("/assets/geo", express.static(path.join(__dirname, "assets/geo")));
 const map = require("./routes/mapRouter")
 
 const login = require("./routes/loginRouter");
-const register = require("./routes/registerRouter")
 const auth = require("./routes/authRouter")
 
 const suggestion = require("./routes/suggestionRouter")
@@ -35,7 +34,6 @@ const geojson = require("./routes/geojsonRouter")
 app.use("", map)
 app.use("/auth", auth)
 app.use("/login", login);
-app.use("/register", register)
 app.use("/suggestion", suggestion)
 app.use("/listing", listing)
 app.use("/geojson", geojson)
