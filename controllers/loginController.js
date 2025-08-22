@@ -42,6 +42,8 @@ exports.userLogin = (req, res, next) => {
                 maxAge: 24 * 60 * 60 * 1000, // 1 day
             });
 
+            console.log(">>> Sending cookie:", res.getHeaders()["set-cookie"]);
+
             return res.json({ user: payload });
         });
     })(req, res, next);
