@@ -1,6 +1,7 @@
 const prisma = require('../prisma/client')
 const multer = require("multer")
 const path = require("path")
+const { sendVerifyEmail } = require("../utils/sendEmail")
 
 
 const storage = multer.diskStorage({
@@ -19,10 +20,13 @@ exports.newListing = [
       // Parse JSON fields sent in FormData
       const listing = JSON.parse(req.body.listing);
       const hostId = req.body.hostId;
+      const email = req.body.email
 
       // const URL = process.env.DB_URL || "http://localhost:3000"; we call backend url with file name on front end so save only name and path is fine
       const savedImages = req.files.map(file => `/assets/staycations/${file.filename}`);
       listing.images = savedImages;
+
+      console.log(listing)
 
       const newStaycation = await prisma.staycation.create({
         data: {
@@ -32,6 +36,9 @@ exports.newListing = [
       });
 
       console.log("New staycation created:", newStaycation);
+
+      // it get the user's email and send to it
+      await sendVerifyEmail(email, newStaycation);
 
       res.status(201).json(newStaycation);
     } catch (error) {

@@ -1,7 +1,7 @@
 const jwt = require('jsonwebtoken');
 const prisma = require('../prisma/client')
 const bcrypt = require('bcryptjs')
-const sendResetEmail = require('../utils/sendEmail');
+const { sendResetEmail } = require('../utils/sendEmail');
 const otpStore = new Map(); 
 
 
@@ -129,7 +129,15 @@ exports.updatePassword = async (req, res) => {
             data: { password: hashedPassword }
         });
 
-        const jwtToken = jwt.sign({ id: user.id }, process.env.JWT_SECRET, { expiresIn: "1h" });
+        const payload = {
+            id: user.id,
+            name: user.name,
+            email: user.email,
+            avatar: user.avatar,
+            isAdmin: user.isAdmin,
+        };
+
+        const jwtToken = jwt.sign(payload, process.env.JWT_SECRET, { expiresIn: "1h" });
 
         res.cookie('token', jwtToken, {
             httpOnly: true,
@@ -138,7 +146,7 @@ exports.updatePassword = async (req, res) => {
             maxAge: 24 * 60 * 60 * 1000,
         });
 
-        return res.json({ user: { id: user.id }, token: jwtToken });
+        return res.json({ user: payload, token: jwtToken });
 
     } catch (err) {
         console.error("Error during password reset:", err.name, err.message);

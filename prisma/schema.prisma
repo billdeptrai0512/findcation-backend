@@ -37,18 +37,6 @@ model User {
   email    String  @unique
   avatar   String?
 
-  facebookId String? @unique
-  facebookName String? 
-  facebookAccessToken String?
-
-  instagramId String? @unique
-  instagramName String?
-  instagramAccessToken String?
-
-  zaloUId String?
-  zaloName String?
-  zaloPhone String?
-
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 

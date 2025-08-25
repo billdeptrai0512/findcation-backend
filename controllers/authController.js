@@ -34,7 +34,13 @@ exports.userLogin = (req, res, next) => {
       console.log("req.user after login:", req.user);
 
       // sign token & set cookie
-      const payload = { id: user.id, name: user.name, isAdmin: user.isAdmin };
+      const payload = {
+        id: user.id,
+        name: user.name,
+        email: user.email,
+        avatar: user.avatar,
+        isAdmin: user.isAdmin,
+    };
 
       const token = jwt.sign(payload, process.env.JWT_SECRET, { expiresIn: '1d' });
 
@@ -98,6 +104,7 @@ exports.userLoginGoogle = async (req, res, next) => {
         const payloadUser = {
             id: user.id,
             name: user.name,
+            email: user.email,
             avatar: user.avatar,
             isAdmin: user.isAdmin,
         };
