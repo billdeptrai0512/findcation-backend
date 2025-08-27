@@ -8,7 +8,7 @@ const path = require('path');
 
 const app = express();
 app.use(cors({
-    origin: ['https://findcation-eight.vercel.app', 'http://localhost:5173', 'https://engineers-chapel-disclaimer-pension.trycloudflare.com'], // danh sách các origin được phép
+    origin: ['https://www.findcation.vn', 'http://localhost:5173'], // danh sách các origin được phép
     credentials: true, // nếu bạn dùng cookie / session
 }));
 
