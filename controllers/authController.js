@@ -3,6 +3,7 @@ const prisma = require('../prisma/client')
 const axios = require("axios");
 const passport = require('passport');
 const bcrypt = require('bcryptjs')
+const path = require("path")
 const { OAuth2Client } = require('google-auth-library');
 const client = new OAuth2Client(process.env.OAUTH_CLIENT_ID);
 
