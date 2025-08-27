@@ -48,13 +48,12 @@ exports.newListing = [
   }
 ];
 
-
 exports.allListing = async (req, res, next) => {
 
     try {
       const allStaycation = await prisma.staycation.findMany();
 
-      console.log(allStaycation.length)
+      console.log("total listing " + allStaycation.length)
   
       res.status(200).json(allStaycation);
     } catch (error) {
@@ -62,6 +61,34 @@ exports.allListing = async (req, res, next) => {
     }
 
 };
+
+exports.allVerifiedListing = async (req, res, next) => {
+
+  try {
+    const allStaycation = await prisma.staycation.findMany();
+
+    // Lọc ở tầng JS
+    const verifiedStaycations = allStaycation.filter((staycation) => {
+      const { contacts } = staycation;
+      return (
+        contacts?.facebook?.verified === true &&
+        contacts?.instagram?.verified === true &&
+        contacts?.zalo?.verified === true
+      );
+    });
+
+    console.log("number verified listing " + verifiedStaycations.length);
+
+    res.status(200).json(verifiedStaycations);
+  } catch (error) {
+    next(error);
+  }
+
+};
+
+// allVerifiedListing
+
+// allPaidListing
 
 exports.oneListing = async (req, res, next) => {
 
@@ -83,6 +110,52 @@ exports.oneListing = async (req, res, next) => {
     console.error("Error fetching listing:", error);
     next(error); // let your error middleware handle it
   }
+
+}
+
+exports.socialMedia = async (req, res, next) => {
+
+  const { staycationId } = req.params;
+  const {  name, code } = req.body
+
+  try {
+    const staycation = await prisma.staycation.findUnique({
+      where: { id: parseInt(staycationId, 10) },
+    });
+
+    if (!staycation) {
+      return res.status(404).json({ message: "Listing not found" });
+    }
+
+    const contacts = staycation.contacts;
+
+    if (!contacts || !contacts[name]) {
+      return res.status(400).json({ message: `Invalid social media name: ${name}` });
+    }
+
+    if (contacts[name].code !== code) {
+      return res.status(400).json({ message: "Verification failed: wrong code" });
+    }
+
+    contacts[name].verified = true;
+
+    const updatedStaycation = await prisma.staycation.update({
+      where: { id: parseInt(staycation.id, 10) },
+      data: {
+        contacts,
+      },
+    });
+
+    return res.status(200).json({
+      message: `${name} verified successfully`,
+      staycation: updatedStaycation,
+    });
+
+  } catch (error) {
+    console.error("Error fetching listing:", error);
+    next(error); // let your error middleware handle it
+  }
+
 
 }
 

@@ -13,7 +13,7 @@ const sendResetEmail = async (to, code) => {
   await transporter.sendMail({
     from: process.env.EMAIL_USER,
     to,
-    subject: "Findcation - Reset Password",
+    subject: "Quên mật khẩu",
     html: `
       <div style="font-family: Arial, sans-serif; text-align: center; padding: 20px;">
         <h2 style="color: #333;">🔐 Password Reset Request</h2>
@@ -42,7 +42,7 @@ const sendVerifyEmail = async (to, staycation) => {
   await transporter.sendMail({
     from: process.env.EMAIL_USER,
     to,
-    subject: "Findcation - Xác minh thông tin liên lạc",
+    subject: "Xác minh thông tin liên lạc",
     html: `
       <div style="font-family: Arial, sans-serif; padding: 20px; color: #333; background:#fafafa;">
         <table width="100%" cellpadding="0" cellspacing="0" border="0" style="max-width:600px; margin:auto; background:#fff; border-radius:8px; box-shadow:0 2px 8px rgba(0,0,0,0.1);">
@@ -115,7 +115,7 @@ const sendVerifyEmail = async (to, staycation) => {
                   <td style="text-align:center;">
                     <h3 style="margin:0 0 10px; color:#0068ff;">Zalo</h3>
                     <div style="font-size:26px; font-weight:bold; letter-spacing:3px; background:#f2f2f2; padding:12px 24px; border-radius:6px; display:inline-block; margin-bottom:10px;">
-                      ${contacts.zalo.code}
+                      ${staycation.contacts.zalo.code}
                     </div>
                     <p style="margin:0; font-size:13px; color:#666;">
                       Gửi mã này cho chúng tôi trong 
