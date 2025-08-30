@@ -15,7 +15,7 @@ exports.allSuggestion = async (req, res, next) => {
       }
     });
 
-    
+    console.log("number suggestions: " + allSuggestion.length)
 
     res.status(200).json(allSuggestion);
   } catch (error) {
