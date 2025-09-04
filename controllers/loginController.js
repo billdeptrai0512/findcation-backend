@@ -19,52 +19,10 @@ exports.checkEmail = async (req, res) => {
     }
 
     if (user && user.password === null) {
-        return res.status(200).json({ user, googleLogin: true, hasRegister: true }) //Already login google once
+        return res.status(200).json({ hasPassword: false, hasRegister: true }) //Use google to login once - show register form + google login
     } 
 
-    return res.status(200).json({ googleLogin: false, hasRegister: true }); // Show password field
-};
-
-exports.userRegister = async (req, res, next) => {
-    
-    const {firstName, lastName , password, email, isAdmin} = req.body
-
-    try {
-
-        const hashedPassword = await bcrypt.hash(password, 10);
-
-        const user = await prisma.user.create({
-            data: {
-                name: firstName + " " + lastName,
-                password: hashedPassword,
-                email: email,
-                isAdmin: isAdmin
-            }
-        })
-
-        const payload = {
-            id: user.id,
-            name: user.name,
-            isAdmin: user.isAdmin, // nếu có
-        };
-
-        const token = jwt.sign(payload, process.env.JWT_SECRET, { expiresIn: '1d' });
-
-        
-        res.cookie("token", token, {
-            httpOnly: true,
-            secure: process.env.NODE_ENV === "production",
-            sameSite: process.env.NODE_ENV === "production" ? "None" : "Lax",
-            maxAge: 24 * 60 * 60 * 1000,
-        });
-
-
-        return res.json({ user: payload });
-
-    } catch (error) {
-        console.error(error);
-        next(error);
-      }
+    return res.status(200).json({ hasPassword: true, hasRegister: true }); // Show password field
 };
 
 exports.verifyEmail = async (req, res) => {

@@ -135,47 +135,60 @@ exports.userLogout = (req, res) => {
 };
 
 exports.userRegister = async (req, res, next) => {
-    
-  const {firstName, lastName , password, email, isAdmin} = req.body
+  const { password, email, isAdmin } = req.body;
 
   try {
+    const existingUser = await prisma.user.findUnique({
+      where: { email },
+    });
 
-      const hashedPassword = await bcrypt.hash(password, 10);
+    const hashedPassword = await bcrypt.hash(password, 10);
 
-      const user = await prisma.user.create({
-          data: {
-              name: firstName + " " + lastName,
-              password: hashedPassword,
-              email: email,
-              isAdmin: isAdmin
-          }
-      })
+    let user;
 
-      const payload = {
-        id: user.id,
-        name: user.name,
-        email: user.email,
-        avatar: user.avatar,
-        isAdmin: user.isAdmin,
-      };
-
-
-      const token = jwt.sign(payload, process.env.JWT_SECRET, { expiresIn: '1d' });
-
-      
-      res.cookie("token", token, {
-          httpOnly: true,
-          secure: process.env.NODE_ENV === "production",
-          sameSite: process.env.NODE_ENV === "production" ? "None" : "Lax",
-          maxAge: 24 * 60 * 60 * 1000,
+    if (existingUser) {
+      if (existingUser.password) {
+        // Case: User already has password -> prevent duplicate register
+        return res.status(400).json({ message: "Email already registered. Please login." });
+      } else {
+        // Case: Google account, no password yet -> update with new password
+        user = await prisma.user.update({
+          where: { email },
+          data: { password: hashedPassword },
+        });
+      }
+    } else {
+      // Case: brand new user
+      user = await prisma.user.create({
+        data: {
+          email,
+          password: hashedPassword,
+          isAdmin: isAdmin || false,
+        },
       });
-
-
-      return res.json({ user: payload });
-
-  } catch (error) {
-      console.error(error);
-      next(error);
     }
+
+    const payload = {
+      id: user.id,
+      email: user.email,
+      avatar: user.avatar,
+      isAdmin: user.isAdmin,
+    };
+
+    const token = jwt.sign(payload, process.env.JWT_SECRET, { expiresIn: "1d" });
+
+    res.cookie("token", token, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: process.env.NODE_ENV === "production" ? "None" : "Lax",
+      maxAge: 24 * 60 * 60 * 1000,
+    });
+
+    return res.json({ user: payload });
+  } catch (error) {
+    console.error(error);
+    next(error);
+  }
 };
+
 
