@@ -12,6 +12,11 @@ app.use(cors({
     credentials: true, // nếu bạn dùng cookie / session
 }));
 
+app.options('*', cors({
+    origin: ['https://findcation.vn', 'https://www.findcation.vn', 'http://localhost:5173'],
+    credentials: true,
+}));
+
 app.use(express.json())
 app.use(cookieParser())
 app.use(express.urlencoded({ extended: true }));
