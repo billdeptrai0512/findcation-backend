@@ -8,13 +8,8 @@ const path = require('path');
 
 const app = express();
 app.use(cors({
-    origin: ['https://findcation.vn', 'https://www.findcation.vn', 'http://localhost:5173'], // danh sách các origin được phép
+    origin: ['https://www.findcation.vn', 'http://localhost:5173'], // danh sách các origin được phép
     credentials: true, // nếu bạn dùng cookie / session
-}));
-
-app.options('*', cors({
-    origin: ['https://findcation.vn', 'https://www.findcation.vn', 'http://localhost:5173'],
-    credentials: true,
 }));
 
 app.use(express.json())
