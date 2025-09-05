@@ -15,7 +15,7 @@ exports.checkEmail = async (req, res) => {
     const user = await prisma.user.findUnique({ where: { email } });
 
     if (!user) {
-        return res.status(200).json({ hasRegister: false }); // Show register form
+        return res.status(200).json({ hasPassword: false, hasRegister: false }); // Show register form
     }
 
     if (user && user.password === null) {
