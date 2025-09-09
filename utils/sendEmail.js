@@ -64,65 +64,9 @@ const sendVerifyEmail = async (to, staycation) => {
             </td>
           </tr>
 
-          <!-- Facebook -->
-          <tr>
-            <td style="padding: 20px; border-top:1px solid #eee; border-bottom:1px solid #eee;">
-              <table width="100%">
-                <tr>
-                  <td style="text-align:center;">
-                    <h3 style="margin:0 0 10px; color:#3b5998;">
-                      <a href="https://www.facebook.com/findcation" target="_blank" style="color:#3b5998; font-weight:bold;">
-                        Facebook
-                      </a>
-                    </h3>
-                    <div style="font-size:26px; font-weight:bold; letter-spacing:3px; background:#f2f2f2; padding:12px 24px; border-radius:6px; display:inline-block; margin-bottom:10px;">
-                      ${staycation.contacts.facebook.code}
-                    </div>
-                  </td>
-                </tr>
-              </table>
-            </td>
-          </tr>
-
-          <!-- Instagram -->
-          <tr>
-            <td style="padding: 20px; border-bottom:1px solid #eee;">
-              <table width="100%">
-                <tr>
-                  <td style="text-align:center;">
-                    <h3 style="margin:0 0 10px; color:#d62976;">
-                      <a href="https://www.instagram.com/findcationnn" target="_blank" style="color:#d62976; font-weight:bold;">
-                        Instagram
-                      </a>
-                    </h3>
-                    <div style="font-size:26px; font-weight:bold; letter-spacing:3px; background:#f2f2f2; padding:12px 24px; border-radius:6px; display:inline-block; margin-bottom:10px;">
-                      ${staycation.contacts.instagram.code}
-                    </div>
-                  </td>
-                </tr>
-              </table>
-            </td>
-          </tr>
-
-          <!-- Zalo -->
-          <tr>
-            <td style="padding: 20px;">
-              <table width="100%">
-                <tr>
-                  <td style="text-align:center;">
-                    <h3 style="margin:0 0 10px; color:#0068ff;">
-                      <a href="https://zalo.me/0902822192" target="_blank" style="color:#0068ff; font-weight:bold;">
-                        Zalo
-                      </a>
-                    </h3>
-                    <div style="font-size:26px; font-weight:bold; letter-spacing:3px; background:#f2f2f2; padding:12px 24px; border-radius:6px; display:inline-block; margin-bottom:10px;">
-                      ${staycation.contacts.zalo.code}
-                    </div>
-                  </td>
-                </tr>
-              </table>
-            </td>
-          </tr>
+          ${contactSection("Facebook", staycation.contacts.facebook?.url, "#3b5998", staycation.contacts.facebook?.code)}
+          ${contactSection("Instagram", staycation.contacts.instagram?.url, "#d62976", staycation.contacts.instagram?.code)}
+          ${contactSection("Zalo", staycation.contacts.zalo?.url, "#0068ff", staycation.contacts.zalo?.code)}
 
           <tr>
             <td style="padding:20px; text-align:center; color:#999; font-size:12px; border-top:1px solid #eee;">
@@ -133,6 +77,31 @@ const sendVerifyEmail = async (to, staycation) => {
       </div>
     `,
   });
+};
+
+const contactSection = (platform, url, color, code) => {
+  if (!url || !code) return ""; // không render nếu url hoặc code trống
+
+  return `
+    <tr>
+      <td style="padding: 20px; border-top:1px solid #eee; border-bottom:1px solid #eee;">
+        <table width="100%">
+          <tr>
+            <td style="text-align:center;">
+              <h3 style="margin:0 0 10px; color:${color};">
+                <a href="${url}" target="_blank" style="color:${color}; font-weight:bold;">
+                  ${platform}
+                </a>
+              </h3>
+              <div style="font-size:26px; font-weight:bold; letter-spacing:3px; background:#f2f2f2; padding:12px 24px; border-radius:6px; display:inline-block; margin-bottom:10px;">
+                ${code}
+              </div>
+            </td>
+          </tr>
+        </table>
+      </td>
+    </tr>
+  `;
 };
 
 // async function test() {
