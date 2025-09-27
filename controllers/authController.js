@@ -191,4 +191,44 @@ exports.userRegister = async (req, res, next) => {
   }
 };
 
+exports.userProfile = async (req, res, next) => {
+
+  const { hostId } = req.params;
+
+  try {
+    const user = await prisma.user.findUnique({
+        where: { id: parseInt(hostId, 10) },
+        select: {
+          id: true,
+          name: true,
+          email: true,
+          avatar: true,
+          isAdmin: true,
+          staycations: {     
+            select: {
+              id: true,
+              name: true,
+              numberOfRoom: true,
+              type: true,
+              images: true,
+              location: true,
+              prices: true,
+              features: true,
+              rooms: true
+            },
+          },
+        },
+      });
+
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    return res.json(user);
+
+  } catch (error) {
+    console.error(error);
+    next(error);
+  }
+}
 

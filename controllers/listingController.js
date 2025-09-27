@@ -1,7 +1,9 @@
 const prisma = require('../prisma/client')
 const multer = require("multer")
 const path = require("path")
+const fs = require("fs");
 const { sendVerifyEmail } = require("../utils/sendEmail")
+const { syncRooms } = require("../utils/roomManager");
 
 
 const storage = multer.diskStorage({
@@ -36,6 +38,21 @@ exports.newListing = [
       });
 
       console.log("New staycation created:", newStaycation);
+
+      if (listing.numberOfRoom && listing.numberOfRoom > 0) {
+        const roomsData = Array.from({ length: listing.numberOfRoom }).map(
+          (_, idx) => ({
+            name: `Room ${idx + 1}`, // e.g. Room 1, Room 2...
+            staycationId: newStaycation.id,
+          })
+        );
+
+        await prisma.room.createMany({
+          data: roomsData,
+        });
+
+        console.log(`Created ${listing.numberOfRoom} rooms`);
+      }
 
       // it get the user's email and send to it
       await sendVerifyEmail(email, newStaycation);
@@ -86,19 +103,16 @@ exports.allVerifiedListing = async (req, res, next) => {
 
 };
 
-// allVerifiedListing
-
-// allPaidListing
-
 exports.oneListing = async (req, res, next) => {
 
   const { staycationId } = req.params;
 
-  console.log(staycationId)
-
   try {
     const staycation = await prisma.staycation.findUnique({
       where: { id: parseInt(staycationId, 10) },
+      include: {
+        rooms: true, 
+      },
     });
 
     if (!staycation) {
@@ -158,6 +172,190 @@ exports.socialMedia = async (req, res, next) => {
 
 
 }
+
+exports.editor = async (req, res, next) => {
+  const { staycationId } = req.params;
+  const { name, features, prices, location, type, numberOfRoom } = req.body;
+
+  try {
+    const staycation = await prisma.staycation.findUnique({
+      where: { id: parseInt(staycationId, 10) },
+      include: { rooms: true },
+    });
+
+    if (!staycation) {
+      return res.status(404).json({ message: "Listing not found" });
+    }
+
+    // sync rooms count if needed
+    const newNumberOfRoom = await syncRooms(prisma, staycation, type, numberOfRoom);
+
+    // overwrite the staycation fully
+    await prisma.staycation.update({
+      where: { id: staycation.id },
+      data: {
+        name,
+        features,
+        prices,
+        location,
+        type,
+        numberOfRoom: newNumberOfRoom,
+      },
+      include: {
+        rooms: true, 
+      },
+    });
+
+    const refreshedStaycation = await prisma.staycation.findUnique({
+      where: { id: staycation.id },
+      include: { rooms: true },
+    });
+
+    return res.status(200).json({
+      message: "Staycation updated successfully",
+      staycation: refreshedStaycation,
+    });
+  } catch (error) {
+    console.error("Error updating staycation:", error);
+    next(error);
+  }
+};
+
+
+exports.editorImage = [
+  upload.array("images"), // multer handles new files
+  async (req, res, next) => {
+    try {
+      const { staycationId } = req.params;
+
+      // 1. Find existing staycation
+      const staycation = await prisma.staycation.findUnique({
+        where: { id: parseInt(staycationId, 10) },
+      });
+
+      if (!staycation) {
+        return res.status(404).json({ message: "Staycation not found" });
+      }
+
+      // 2. Parse current images (from DB) and new ones (from client)
+      const oldImages = staycation.images || [];
+
+      // New images from client (string paths for kept ones)
+      const keptImages = req.body.existingImages
+        ? JSON.parse(req.body.existingImages)
+        : [];
+
+      // Newly uploaded files
+      const uploadedImages = req.files.map(
+        (file) => `/assets/staycations/${file.filename}`
+      );
+
+      const finalImages = [...keptImages, ...uploadedImages];
+
+      // 3. Delete files that are in oldImages but not in finalImages
+      const toDelete = oldImages.filter((img) => !finalImages.includes(img));
+      toDelete.forEach((imgPath) => {
+        const filePath = path.join(__dirname, "..", imgPath);
+        fs.unlink(filePath, (err) => {
+          if (err) console.warn("Failed to delete:", imgPath, err.message);
+        });
+      });
+
+      // 4. Update DB
+      await prisma.staycation.update({
+        where: { id: staycation.id },
+        data: { images: finalImages },
+      });
+
+      const refreshedStaycation = await prisma.staycation.findUnique({
+        where: { id: staycation.id },
+        include: { rooms: true },
+      });
+
+      res.status(200).json({
+        message: "Images updated successfully",
+        staycation: refreshedStaycation,
+      });
+
+    } catch (error) {
+      console.error(error);
+      res.status(500).json({ message: "Image update failed" });
+    }
+  },
+];
+
+exports.editorRoomImage = [
+  upload.array("images"),
+  async (req, res, next) => {
+    try {
+
+      const { staycationId, roomId } = req.params;
+      const { name } = req.body;
+
+      // 1. Make sure staycation exists
+      const staycation = await prisma.staycation.findUnique({
+        where: { id: parseInt(staycationId, 10) },
+        include: { rooms: true },
+      });
+
+      if (!staycation) {
+        return res.status(404).json({ message: "Staycation not found" });
+      }
+
+      // 2. Find the room inside staycation
+      const room = staycation.rooms.find(
+        (r) => r.id === parseInt(roomId, 10)
+      );
+
+      if (!room) {
+        return res.status(404).json({ message: "Room not found in staycation" });
+      }
+
+      // 3. Handle images
+      const oldImages = room.images || [];
+      const keptImages = req.body.existingImages
+        ? JSON.parse(req.body.existingImages)
+        : [];
+      const uploadedImages = req.files.map(
+        (file) => `/assets/staycations/${file.filename}`
+      );
+
+      const finalImages = [...keptImages, ...uploadedImages];
+
+      // Delete files no longer used
+      const toDelete = oldImages.filter((img) => !finalImages.includes(img));
+      toDelete.forEach((imgPath) => {
+        const filePath = path.join(__dirname, "..", imgPath);
+        fs.unlink(filePath, (err) => {
+          if (err) console.warn("Failed to delete:", imgPath, err.message);
+        });
+      });
+
+      // 4. Update room
+      const updatedRoom = await prisma.room.update({
+        where: { id: room.id },
+        data: { images: finalImages, name },
+      });
+
+      // 5. Refresh staycation with rooms
+      const refreshedStaycation = await prisma.staycation.findUnique({
+        where: { id: staycation.id },
+        include: { rooms: true },
+      });
+
+      res.status(200).json({
+        message: "Room images updated successfully",
+        staycation: refreshedStaycation,
+        room: updatedRoom,
+      });
+    } catch (error) {
+      console.error(error);
+      res.status(500).json({ message: "Room image update failed" });
+    }
+  },
+];
+
+
 
 
   

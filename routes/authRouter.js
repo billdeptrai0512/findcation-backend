@@ -5,6 +5,7 @@ const jwtAuth = require("../middleware/jwtAuth");
 
 
 // authRouter.get("/", authController.verifyAuth)
+authRouter.get("/:hostId", authController.userProfile)
 authRouter.post("/login", authController.userLogin);
 authRouter.post("/logout", authController.userLogout);
 authRouter.post("/google", authController.userLoginGoogle);
