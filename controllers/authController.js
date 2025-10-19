@@ -41,7 +41,8 @@ exports.userLogin = (req, res, next) => {
         email: user.email,
         avatar: user.avatar,
         isAdmin: user.isAdmin,
-    };
+        staycations: user.staycations
+      };
 
       const token = jwt.sign(payload, process.env.JWT_SECRET, { expiresIn: '1d' });
 
@@ -74,6 +75,9 @@ exports.userLoginGoogle = async (req, res, next) => {
         // Check if user already exists
         let user = await prisma.user.findUnique({
             where: { email },
+            include: {
+              staycations: true
+            }
         });
 
         // If not, create new user
@@ -108,6 +112,7 @@ exports.userLoginGoogle = async (req, res, next) => {
             email: user.email,
             avatar: user.avatar,
             isAdmin: user.isAdmin,
+            staycations: user.staycations
         };
 
         const token = jwt.sign(payloadUser, process.env.JWT_SECRET, {
@@ -204,6 +209,7 @@ exports.userProfile = async (req, res, next) => {
           email: true,
           avatar: true,
           isAdmin: true,
+          contacts: true,
           staycations: {     
             select: {
               id: true,
@@ -231,4 +237,53 @@ exports.userProfile = async (req, res, next) => {
     next(error);
   }
 }
+
+exports.userContact = async (req, res, next) => {
+  const { hostId } = req.params;
+  const { type, url } = req.body;
+
+  try {
+    const user = await prisma.user.findUnique({
+      where: { id: parseInt(hostId, 10) },
+      select: { contacts: true }
+    });
+
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    // Parse existing contacts (could be null on first time)
+    const currentContacts = user.contacts || {};
+
+    // Update only the selected type (e.g. facebook, zalo, etc.)
+    const updatedContacts = {
+      ...currentContacts,
+      [type]: {
+        ...(currentContacts[type] || {}),
+        url,
+        verified: true, // Assuming verification is done elsewhere
+      }
+    };
+
+    const updatedUser = await prisma.user.update({
+      where: { id: parseInt(hostId, 10) },
+      data: {
+        contacts: updatedContacts
+      },
+      select: {
+        id: true,
+        contacts: true
+      }
+    });
+
+    return res.json({
+      message: `Updated ${type} contact successfully`,
+      contacts: updatedUser.contacts
+    });
+
+  } catch (error) {
+    console.error("Update user contact failed", error);
+    next(error);
+  }
+};
 

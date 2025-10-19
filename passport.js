@@ -9,9 +9,12 @@ passport.use(new LocalStrategy({ usernameField: 'email', passwordField: 'passwor
     , async (email, password, done) => {
         try {
             
-            const user = await prisma.user.findUnique({ where: { email } });
-
-            console.log(user)
+            const user = await prisma.user.findUnique({ 
+                where: { email },
+                include: {
+                    staycations: true
+                }
+            });
             
             if (!user) {
                 return done(null, false, { message: 'Email chưa đăng ký' });

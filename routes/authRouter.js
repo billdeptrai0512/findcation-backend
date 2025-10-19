@@ -10,7 +10,7 @@ authRouter.post("/login", authController.userLogin);
 authRouter.post("/logout", authController.userLogout);
 authRouter.post("/google", authController.userLoginGoogle);
 authRouter.post("/register", authController.userRegister);
-
+authRouter.patch("/contact/:hostId", authController.userContact);
 
 
 

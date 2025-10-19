@@ -49,25 +49,6 @@ model User {
   Suggestion  Suggestion[]
 }
 
-model Feedback {
-  id Int @id @default(autoincrement())
-
-  title       String
-  description String
-
-  picture String[] // Could be a URL or file path
-  rating  Int
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  userId Int
-  user   User @relation(fields: [userId], references: [id])
-
-  staycationId Int
-  staycation   Staycation @relation(fields: [staycationId], references: [id], onDelete: Cascade)
-}
-
 //Staycation that represent an address could have 2 3 room inside. How to handle this ?
 model Staycation {
   id Int @id @default(autoincrement())
@@ -99,6 +80,25 @@ model Room {
   images String[]
 
   isAvailable Boolean @default(true)
+
+  staycationId Int
+  staycation   Staycation @relation(fields: [staycationId], references: [id], onDelete: Cascade)
+}
+
+model Feedback {
+  id Int @id @default(autoincrement())
+
+  title       String
+  description String
+
+  picture String[] // Could be a URL or file path
+  rating  Int
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  userId Int
+  user   User @relation(fields: [userId], references: [id])
 
   staycationId Int
   staycation   Staycation @relation(fields: [staycationId], references: [id], onDelete: Cascade)

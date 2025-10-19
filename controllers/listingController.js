@@ -127,6 +127,41 @@ exports.oneListing = async (req, res, next) => {
 
 }
 
+exports.removeListing = async (req, res, next) => {
+  const { staycationId } = req.params;
+
+  try {
+    const id = parseInt(staycationId, 10);
+
+    // Check if staycation exists
+    const staycation = await prisma.staycation.findUnique({
+      where: { id },
+      include: { rooms: true },
+    });
+
+    if (!staycation) {
+      return res.status(404).json({ message: "Listing not found" });
+    }
+
+    // If you want to remove rooms first (if no cascade rule exists in schema)
+    if (staycation.rooms.length > 0) {
+      await prisma.room.deleteMany({
+        where: { staycationId: id },
+      });
+    }
+
+    // Remove the staycation itself
+    await prisma.staycation.delete({
+      where: { id },
+    });
+
+    res.status(200).json({ message: "Listing deleted successfully" });
+  } catch (error) {
+    console.error("Error deleting listing:", error);
+    next(error);
+  }
+};
+
 exports.socialMedia = async (req, res, next) => {
 
   const { staycationId } = req.params;
