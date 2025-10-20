@@ -59,6 +59,6 @@ async function assignFirstStaycationContactsToUser(userId) {
   }
 }
 
-// migrateAllUserContacts()
+migrateAllUserContacts()
 
 module.exports = { assignFirstStaycationContactsToUser };
