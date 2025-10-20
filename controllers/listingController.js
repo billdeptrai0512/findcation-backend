@@ -112,6 +112,7 @@ exports.oneListing = async (req, res, next) => {
       where: { id: parseInt(staycationId, 10) },
       include: {
         rooms: true, 
+        host: true,
       },
     });
 
