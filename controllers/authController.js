@@ -101,7 +101,8 @@ exports.userLoginGoogle = async (req, res, next) => {
                     name,
                     email,
                     isAdmin: false,
-                    avatar: avatarRelativePath, // You can prefix this on frontend with your Imgix URL
+                    avatar: avatarRelativePath,
+                    contacts: { facebook: "", zalo: "" , instagram: "" }
                 },
             });
         }
@@ -112,8 +113,10 @@ exports.userLoginGoogle = async (req, res, next) => {
             email: user.email,
             avatar: user.avatar,
             isAdmin: user.isAdmin,
-            staycations: user.staycations
+            staycations: user.staycations ? user.staycations : []
         };
+
+        console.log(payloadUser)
 
         const token = jwt.sign(payloadUser, process.env.JWT_SECRET, {
             expiresIn: '1d',
@@ -163,12 +166,14 @@ exports.userRegister = async (req, res, next) => {
         });
       }
     } else {
+
       // Case: brand new user
       user = await prisma.user.create({
         data: {
           email,
           password: hashedPassword,
           isAdmin: isAdmin || false,
+          contacts: { facebook: "", zalo: "" , instagram: "" },
         },
       });
     }
@@ -178,6 +183,7 @@ exports.userRegister = async (req, res, next) => {
       email: user.email,
       avatar: user.avatar,
       isAdmin: user.isAdmin,
+      staycations: user.staycations ? user.staycations : []
     };
 
     const token = jwt.sign(payload, process.env.JWT_SECRET, { expiresIn: "1d" });
