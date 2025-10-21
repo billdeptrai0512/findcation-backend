@@ -36,6 +36,7 @@ async function assignFirstStaycationContactsToUser(userId) {
 
     // 2️⃣ Get contacts from the staycation
     const contacts = firstStaycation.contacts;
+    console.log(contacts)
     if (!contacts || Object.keys(contacts).length === 0) {
       console.log(`First staycation for user ${userId} has no contacts`);
       return;
