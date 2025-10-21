@@ -26,6 +26,7 @@ async function assignFirstStaycationContactsToUser(userId) {
     const firstStaycation = await prisma.staycation.findFirst({
       where: { hostId: userId },
       orderBy: { createdAt: 'asc' },
+      select: { id: true, contacts: true },
     });
 
     if (!firstStaycation) {
