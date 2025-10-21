@@ -1,72 +1,72 @@
-const { Prisma } = require('@prisma/client');
-const prisma = require('./client')
+const { PrismaClient } = require('@prisma/client');
+const prisma = new PrismaClient();
 
-async function migrateAllUserContacts() {
+/**
+ * Assign contacts from the first staycation of each user
+ * to that user, then clear them from the staycation.
+ */
+async function assignStaycationContactsToUsers() {
   try {
-    // 🧠 Get all users
+    // 1️⃣ Get all users
     const users = await prisma.user.findMany({
       select: { id: true },
     });
+
+    console.log(`Found ${users.length} users.`);
 
     for (const user of users) {
       await assignFirstStaycationContactsToUser(user.id);
     }
 
-    console.log(`✅ Migration finished for ${users.length} users`);
+    console.log('✅ All user contacts updated.');
   } catch (error) {
-    console.error('❌ Migration failed:', error);
+    console.error('❌ Failed to assign contacts:', error);
   } finally {
     await prisma.$disconnect();
   }
 }
 
-
+/**
+ * Assign the contacts from a user's first staycation to the user
+ * and clear the staycation contacts.
+ */
 async function assignFirstStaycationContactsToUser(userId) {
   try {
-    // 1️⃣ Find the first staycation of this user (by createdAt ascending)
+    // Find the first staycation owned by this user
     const firstStaycation = await prisma.staycation.findFirst({
-      where: { 
-        hostId: userId,
-        contacts: {
-          not: Prisma.JsonNull, // skip NULL JSON
-        },
-      },
+      where: { hostId: userId },
       orderBy: { createdAt: 'asc' },
       select: { id: true, contacts: true },
     });
 
     if (!firstStaycation) {
-      console.log(`No staycations found for user ${userId}`);
+      console.log(`⚪ No staycation found for user ${userId}`);
       return;
     }
 
-    // 2️⃣ Get contacts from the staycation
     const contacts = firstStaycation.contacts;
-    console.log(contacts)
     if (!contacts || Object.keys(contacts).length === 0) {
-      console.log(`First staycation for user ${userId} has no contacts`);
+      console.log(`⚪ Staycation ${firstStaycation.id} has no contacts.`);
       return;
     }
 
-    // 3️⃣ Update user.contacts with the staycation contacts
+    // Update user with staycation contacts
     await prisma.user.update({
       where: { id: userId },
       data: { contacts },
     });
 
-    console.log(`✅ Assigned contacts from staycation ${firstStaycation.id} to user ${userId}`);
+    console.log(`✅ Copied contacts from staycation ${firstStaycation.id} → user ${userId}`);
 
-    // 4️⃣ (Optional) Clear contacts from the staycation after moving
-    // await prisma.staycation.update({
-    //   where: { id: firstStaycation.id },
-    //   data: { contacts: {} },
-    // });
-
+    // Clear contacts from staycation (optional but recommended)
+    await prisma.staycation.update({
+      where: { id: firstStaycation.id },
+      data: { contacts: {} },
+    });
   } catch (error) {
-    console.error(`❌ Failed to assign first staycation contacts for user ${userId}:`, error);
+    console.error(`❌ Failed to process user ${userId}:`, error.message);
   }
 }
 
-migrateAllUserContacts()
-
-module.exports = { assignFirstStaycationContactsToUser };
+// Run the script
+assignStaycationContactsToUsers();
