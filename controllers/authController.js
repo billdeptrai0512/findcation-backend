@@ -264,11 +264,7 @@ exports.userContact = async (req, res, next) => {
     // Update only the selected type (e.g. facebook, zalo, etc.)
     const updatedContacts = {
       ...currentContacts,
-      [type]: {
-        ...(currentContacts[type] || {}),
-        url,
-        verified: true, // Assuming verification is done elsewhere
-      }
+      [type]: url
     };
 
     const updatedUser = await prisma.user.update({
