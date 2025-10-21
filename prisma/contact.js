@@ -1,3 +1,4 @@
+const { Prisma } = require('@prisma/client');
 const prisma = require('./client')
 
 async function migrateAllUserContacts() {
@@ -24,7 +25,12 @@ async function assignFirstStaycationContactsToUser(userId) {
   try {
     // 1️⃣ Find the first staycation of this user (by createdAt ascending)
     const firstStaycation = await prisma.staycation.findFirst({
-      where: { hostId: userId },
+      where: { 
+        hostId: userId,
+        contacts: {
+          not: Prisma.JsonNull, // skip NULL JSON
+        },
+      },
       orderBy: { createdAt: 'asc' },
       select: { id: true, contacts: true },
     });
@@ -51,10 +57,10 @@ async function assignFirstStaycationContactsToUser(userId) {
     console.log(`✅ Assigned contacts from staycation ${firstStaycation.id} to user ${userId}`);
 
     // 4️⃣ (Optional) Clear contacts from the staycation after moving
-    await prisma.staycation.update({
-      where: { id: firstStaycation.id },
-      data: { contacts: {} },
-    });
+    // await prisma.staycation.update({
+    //   where: { id: firstStaycation.id },
+    //   data: { contacts: {} },
+    // });
 
   } catch (error) {
     console.error(`❌ Failed to assign first staycation contacts for user ${userId}:`, error);
