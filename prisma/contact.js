@@ -1,5 +1,4 @@
-const { PrismaClient } = require('@prisma/client');
-const prisma = new PrismaClient();
+const prisma = require('./client');
 
 /**
  * Assign contacts from the first staycation of each user
@@ -59,10 +58,10 @@ async function assignFirstStaycationContactsToUser(userId) {
     console.log(`✅ Copied contacts from staycation ${firstStaycation.id} → user ${userId}`);
 
     // Clear contacts from staycation (optional but recommended)
-    await prisma.staycation.update({
-      where: { id: firstStaycation.id },
-      data: { contacts: {} },
-    });
+    // await prisma.staycation.update({
+    //   where: { id: firstStaycation.id },
+    //   data: { contacts: {} },
+    // });
   } catch (error) {
     console.error(`❌ Failed to process user ${userId}:`, error.message);
   }
