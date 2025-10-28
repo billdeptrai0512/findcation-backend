@@ -38,6 +38,21 @@ app.use("/suggestion", suggestion)
 app.use("/listing", listing)
 app.use("/geojson", geojson)
 
+const cron = require("node-cron");
+const { exec } = require("child_process");
+
+cron.schedule("0 0 * * *", () => {
+  console.log("🧹 Running daily image cleanup...");
+  exec(`node ${path.join(__dirname, "scripts/cleanupUnusedImages.js")}`, (error, stdout, stderr) => {
+    if (error) {
+      console.error(`Cleanup failed: ${error.message}`);
+      return;
+    }
+    if (stderr) console.error(stderr);
+    console.log(stdout);
+  });
+});
+
 const PORT = process.env.PORT || 3333;
 app.listen(PORT, () => console.log(`Express app listening on port ${PORT}!`));
 

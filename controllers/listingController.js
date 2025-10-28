@@ -257,7 +257,6 @@ exports.editor = async (req, res, next) => {
   }
 };
 
-
 exports.editorImage = [
   upload.array("images"), // multer handles new files
   async (req, res, next) => {
