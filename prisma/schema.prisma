@@ -67,9 +67,28 @@ model Staycation {
 
   feedbacks Feedback[]
   rooms     Room[]
-
   hostId Int
   host   User @relation(fields: [hostId], references: [id])
+
+  traffic Traffic[]
+}
+
+enum ContactType {
+  ZALO
+  FACEBOOK
+  INSTAGRAM
+}
+
+model Traffic {
+  id            Int       @id @default(autoincrement())
+  staycationId  Int
+  staycation    Staycation @relation(fields: [staycationId], references: [id])
+
+  platform      ContactType
+  date          DateTime
+  clicks        Int          @default(0)
+
+  @@unique([staycationId, platform, date]) // unique per day per platform per staycation
 }
 
 model Room {
