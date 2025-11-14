@@ -1,4 +1,5 @@
 // utils/sendEmail.js
+const prisma = require('../prisma/client');
 const dotenv = require("dotenv");
 dotenv.config();
 const nodemailer = require("nodemailer");
@@ -104,18 +105,142 @@ const contactSection = (platform, url, color, code) => {
   `;
 };
 
-// async function test() {
-//   const staycation = {
-//     name : "billdeptrai",
-//     contacts : {
-//       facebook: { code : "123456" },
-//       zalo: { code : "123456" },
-//       instagram: { code : "123456" }
-//     }
-//   };
+const sendPerformaceEmail = async (host) => {
+  console.log(JSON.stringify(host, null, 2))
 
-//   await sendVerifyEmail("billnguyen05121998@gmail.com", staycation);
-// }
+  const transporter = nodemailer.createTransport({
+    service: "gmail",
+    auth: {
+      user: process.env.EMAIL_USER,
+      pass: process.env.EMAIL_PASS,
+    },
+  });
+
+  const staycationTraffic = host.staycations.map((stay) => {
+    const traffic = { FACEBOOK: 0, INSTAGRAM: 0, ZALO: 0 };
+
+    stay.clicks.forEach((clickRecord) => {
+      clickRecord.contactClicks.forEach((contactClick) => {
+        const type = contactClick.contactType;
+        traffic[type] += contactClick.clicks;
+      });
+    });
+
+    const totalClicks = traffic.FACEBOOK + traffic.INSTAGRAM + traffic.ZALO;
+
+    return {
+        name: stay.location.address,
+        traffic,
+        totalClicks
+      };
+  });
+
+  // 🔹 Create dynamic HTML for each staycation
+  const staycationBlocks = host.staycations.map((stay) => {
+  
+    const totalClicks = stay.clicks.reduce((sum, day) => sum + day.totalClicks, 0);
+    console.log(totalClicks)
+    const facebookClicks = stay.clicks.filter(c => c.platform === "facebook").length;
+    const zaloClicks = stay.clicks.filter(c => c.platform === "zalo").length;
+    const instagramClicks = stay.clicks.filter(c => c.platform === "instagram").length;
+
+    // Example % change if you want (here just mock value)
+    const trend = totalClicks > 100 ? "▲ +12%" : "▼ -5%";
+    const trendColor = totalClicks > 100 ? "#16a34a" : "#dc2626";
+
+    return `
+      <div style="border:1px solid #eee; border-radius:10px; padding:14px 18px; margin-bottom:12px; background:#fafafa;">
+        <div style="font-weight:600; font-size:16px; color:#222;">${stay.location?.address || "Địa điểm chưa có tên"}</div>
+        <ul style="list-style:none; padding:8px 0 0; margin:0; font-size:14px; color:#444;">
+          <li>Tổng cộng: <strong>${staycationTraffic}</strong> <span style="color:${trendColor};">${trend}</span></li>
+        </ul>
+      </div>
+    `;
+  }).join("");
+
+  const html = `
+    <div style="font-family: Arial, sans-serif; padding: 20px; color: #333; background:#fafafa;">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0" style="background-color:#FAFBF8; text-align:center;">
+        <tr>
+          <td align="center">
+            <img src="cid:logo" alt="Logo" width="86" height="86" style="display:block;" />
+          </td>
+        </tr>
+      </table>
+
+      <!-- Summary Section -->
+      <table width="100%" cellpadding="0" cellspacing="0" border="0" style="background:#ffffff; border-radius:10px; margin-bottom:20px;">
+        <div style="margin-top:20px; background:#fff; border-radius:8px; padding:20px;">
+          <h3 style="font-size:18px; margin:0 0 10px; color:#333;">Dưới đây là số lần các địa điểm của bạn được liên lạc trong tuần vừa qua</h3>
+
+          ${staycationBlocks}
+
+        </div>
+      </table>
+
+      <!-- Footer -->
+      <table width="100%" cellpadding="0" cellspacing="0" border="0" style="text-align:center; color:#999;">
+        <tr>
+          <td style="font-size:12px; padding-top:10px;">
+            © 2025 Findcation. All rights reserved.<br/>
+          </td>
+        </tr>
+      </table>
+    </div>
+  `;
+
+  await transporter.sendMail({
+    from: "Findcation",
+    to: "billnguyen05121998@gmail.com",
+    subject: "[Findcation] Báo cáo hiệu suất hàng tuần",
+    html,
+    attachments: [
+      {
+        filename: "logo.png",
+        path: __dirname + "/../assets/logo.png",
+        cid: "logo",
+      },
+    ],
+  });
+};
+
+
+async function test() {
+  const staycation = {
+    name : "billdeptrai",
+    contacts : {
+      facebook: { code : "123456" },
+      zalo: { code : "123456" },
+      instagram: { code : "123456" }
+    }
+  };
+
+  const host = await prisma.user.findUnique({
+    where: { id: 1 },
+    select: {
+      staycations: {
+        select: {
+          location: true,
+          clicks: {
+            select: {
+              contactClicks: {
+                select: {
+                  contactType: true,
+                  clicks: true
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  });
+
+  console.log(host)
+
+  // await sendVerifyEmail("billnguyen05121998@gmail.com", staycation);
+  await sendPerformaceEmail(host)
+}
 
 // test();
 

@@ -17,6 +17,7 @@ app.use(cookieParser())
 app.use(express.urlencoded({ extended: true }));
 
 // Static assets
+app.use('/assets', express.static(path.join(__dirname, 'assets')));
 app.use('/assets/avatar', express.static(path.join(__dirname, 'assets/avatar')));
 app.use("/assets/staycations", express.static(path.join(__dirname, "assets/staycations")));
 app.use("/assets/geo", express.static(path.join(__dirname, "assets/geo")));
@@ -29,6 +30,7 @@ const auth = require("./routes/authRouter")
 
 const suggestion = require("./routes/suggestionRouter")
 const listing = require("./routes/listingRouter")
+const traffic = require("./routes/trafficRouter")
 const geojson = require("./routes/geojsonRouter")
 
 app.use("", map)
@@ -36,11 +38,13 @@ app.use("/auth", auth)
 app.use("/login", login);
 app.use("/suggestion", suggestion)
 app.use("/listing", listing)
+app.use("/traffic", traffic)
 app.use("/geojson", geojson)
 
 const cron = require("node-cron");
 const { exec } = require("child_process");
 
+// this schedule is the best fit for test report in the first week
 cron.schedule("0 0 * * *", () => {
   console.log("🧹 Running daily image cleanup...");
   exec(`node ${path.join(__dirname, "scripts/cleanupUnusedImages.js")}`, (error, stdout, stderr) => {
@@ -52,6 +56,7 @@ cron.schedule("0 0 * * *", () => {
     console.log(stdout);
   });
 });
+
 
 const PORT = process.env.PORT || 3333;
 app.listen(PORT, () => console.log(`Express app listening on port ${PORT}!`));

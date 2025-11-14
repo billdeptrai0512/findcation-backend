@@ -5,7 +5,6 @@ const fs = require("fs");
 const { sendVerifyEmail } = require("../utils/sendEmail")
 const { syncRooms } = require("../utils/roomManager");
 
-
 const storage = multer.diskStorage({
   destination: "./assets/staycations",
   filename: (req, file, cb) => {
@@ -389,7 +388,6 @@ exports.editorRoomImage = [
     }
   },
 ];
-
 
 
 
