@@ -45,9 +45,9 @@ const cron = require("node-cron");
 const { exec } = require("child_process");
 
 // this schedule is the best fit for test report in the first week
-cron.schedule("0 0 * * *", () => {
-  console.log("🧹 Running daily image cleanup...");
-  exec(`node ${path.join(__dirname, "scripts/cleanupUnusedImages.js")}`, (error, stdout, stderr) => {
+cron.schedule("0 0 * * 0", () => {
+  console.log("🧹 Running weekly image cleanup...");
+  exec(`node ${path.join(__dirname, "utils/cleanUnusedImages.js")}`, (error, stdout, stderr) => {
     if (error) {
       console.error(`Cleanup failed: ${error.message}`);
       return;
@@ -55,6 +55,11 @@ cron.schedule("0 0 * * *", () => {
     if (stderr) console.error(stderr);
     console.log(stdout);
   });
+});
+
+cron.schedule("0 0 * * 0", () => {
+  console.log("⏰ Weekly traffic report running...");
+  exec(`node ${path.join(__dirname, "utils/email/sendWeeklyTraffic.js")}`);
 });
 
 
