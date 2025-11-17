@@ -60,7 +60,9 @@ model Staycation {
   contacts  Json
   prices   Json
   features String[]
-  images   String[] //
+  images   String[] 
+
+  verify Boolean // this is for paid staycation
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt

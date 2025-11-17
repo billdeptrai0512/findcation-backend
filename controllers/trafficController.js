@@ -1,5 +1,21 @@
 const prisma = require('../prisma/client')
 
+exports.getAllTraffic = async (req, res) => {
+  try {
+    const traffic = await prisma.traffic.findMany({
+        include: {
+            staycation: true
+        },
+        orderBy: { date: "desc" }
+    });
+
+    res.json(traffic);
+  } catch (error) {
+    console.error("Failed to fetch all traffic", error);
+    res.status(500).json({ error: "Failed to fetch all traffic" });
+  }
+};
+
 exports.recordStaycationClick = async (req, res) => {
   const { contactType } = req.body;
   console.log(contactType)
