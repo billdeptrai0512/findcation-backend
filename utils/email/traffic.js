@@ -8,52 +8,57 @@ const sendPerformanceEmail = async (host, statsByStaycation) => {
     const transporter = nodemailer.createTransport({
         service: "gmail",
         auth: {
-        user: process.env.EMAIL_USER,
-        pass: process.env.EMAIL_PASS,
+            user: process.env.EMAIL_USER,
+            pass: process.env.EMAIL_PASS,
         },
     });
 
-  // Build HTML blocks per staycation
+    // Build HTML blocks per staycation
     const staycationStatsBlocks = statsByStaycation.map((stay) => {
-    const { address, traffic } = stay;
+        const { address, traffic } = stay;
 
-    return `
-      <div style="border:1px solid #eee; border-radius:10px; padding:14px 18px; margin-bottom:12px; background:#fafafa;">
-        <div style="font-weight:600; font-size:16px; color:#222;">${address}</div>
-        <ul style="list-style-type: disc; padding-left: 20px; padding-top: 8px; margin:0; font-size:14px; color:#444;">
-            <li> <strong>Facebook: ${traffic.FACEBOOK} </strong> truy cập</li>
-            <li> <strong>Instagram: ${traffic.INSTAGRAM} </strong> truy cập</li>
-            <li> <strong>Zalo: ${traffic.ZALO} </strong> truy cập</li>
-        </ul>
-      </div>
-    `;
+        return `
+        <div style="border:1px solid #eee; border-radius:10px; padding:14px 18px; margin-bottom:12px; background:#fafafa;">
+            <div style="font-weight:600; font-size:16px; color:#222;">${address}</div>
+            <ul style="list-style-type: disc; padding-left: 20px; padding-top: 8px; margin:0; font-size:14px; color:#444;">
+                <li><strong>Facebook: ${traffic.FACEBOOK}</strong> khách</li>
+                <li><strong>Instagram: ${traffic.INSTAGRAM}</strong> khách</li>
+                <li><strong>Zalo: ${traffic.ZALO}</strong> khách</li>
+            </ul>
+        </div>
+        `;
     }).join("");
 
-    const name = statsByStaycation[0].name
+    const name = statsByStaycation[0]?.name || "";
     const totalClicks = statsByStaycation.reduce((sum, stay) => {
         const t = stay.traffic;
         return sum + (t.FACEBOOK || 0) + (t.INSTAGRAM || 0) + (t.ZALO || 0);
     }, 0);
-    // const trend = totalClicks > 100 ? "▲ +12%" : "▼ -5%";
-    // const trendColor = totalClicks > 100 ? "#16a34a" : "#dc2626";
-    // <span style="color:${trendColor};">${trend}</span>
 
     const html = `
-        <div style="font-family: Arial, sans-serif; padding: 20px; color: #333; background:#fafafa;">
-        <h2>Thống kê traffic mỗi tuần của từng địa chỉ:</h2>
-        ${staycationStatsBlocks}
-        <div style="font-weight:600; font-size:16px; color:#222;">
-            Vậy là đã có ${totalClicks} khách hàng liên lạc với ${name} thông qua Findcation</div>
+    <div style="font-family: Arial, sans-serif; padding: 20px; color: #333; background:#fafafa;">
+        <div style="text-align:center; margin-bottom:20px;">
+            <img src="https://api.findcation.vn/assets/logo.png" alt="Findcation" style="height:60px;">
         </div>
+        <h2>Xin chào, ${name}</h2>
+        <div style="font-weight:500; font-size:16px; color:#222; margin-bottom:16px;">
+            Dưới đây là thống kê traffic liên lạc đến bạn trong tuần vừa qua:
+        </div>
+        ${staycationStatsBlocks}
+        <div style="font-weight:600; font-size:16px; color:#222; margin-top:16px;">
+            Vậy là đã có ${totalClicks} khách hàng liên lạc với ${name} thông qua Findcation
+        </div>
+    </div>
     `;
 
     await transporter.sendMail({
-        from: "Findcation",
-        to: host.email,
+        from: 'Findcation',
+        to: 'billnguyen0512@gmail.com', // host.email when in production
         subject: "[Findcation] Báo cáo traffic hàng tuần",
         html,
     });
 };
+
 
 const getWeeklyTrafficStats = async (hostId) => {
   const today = new Date();
@@ -69,8 +74,6 @@ const getWeeklyTrafficStats = async (hostId) => {
       location: true,
     },
   });
-
-  console.log(staycations)
 
   // Get traffic stats for each staycation
   const statsByStaycation = await Promise.all(staycations.map(async (stay) => {
