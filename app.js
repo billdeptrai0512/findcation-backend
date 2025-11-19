@@ -41,28 +41,6 @@ app.use("/listing", listing)
 app.use("/traffic", traffic)
 app.use("/geojson", geojson)
 
-const cron = require("node-cron");
-const { exec } = require("child_process");
-
-// this schedule is the best fit for test report in the first week
-cron.schedule("0 0 * * 0", () => {
-  console.log("🧹 Running weekly image cleanup...");
-  exec(`node ${path.join(__dirname, "utils/cleanUnusedImages.js")}`, (error, stdout, stderr) => {
-    if (error) {
-      console.error(`Cleanup failed: ${error.message}`);
-      return;
-    }
-    if (stderr) console.error(stderr);
-    console.log(stdout);
-  });
-});
-
-cron.schedule("0 0 * * 0", () => {
-  console.log("⏰ Weekly traffic report running...");
-  exec(`node ${path.join(__dirname, "utils/email/sendWeeklyTraffic.js")}`);
-});
-
-
 const PORT = process.env.PORT || 3333;
 app.listen(PORT, () => console.log(`Express app listening on port ${PORT}!`));
 
