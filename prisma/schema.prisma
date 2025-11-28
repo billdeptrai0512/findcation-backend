@@ -62,7 +62,7 @@ model Staycation {
   features String[]
   images   String[] 
 
-  verify Boolean // this is for paid staycation
+  verify Boolean @default(false) // this is for paid staycation
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
