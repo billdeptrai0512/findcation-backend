@@ -65,17 +65,19 @@ exports.newListing = [
 ];
 
 exports.allListing = async (req, res, next) => {
+  try {
+    const allStaycation = await prisma.staycation.findMany({
+      orderBy: {
+        createdAt: 'desc',
+      },
+    });
 
-    try {
-      const allStaycation = await prisma.staycation.findMany();
+    console.log("total listing " + allStaycation.length);
 
-      console.log("total listing " + allStaycation.length)
-  
-      res.status(200).json(allStaycation);
-    } catch (error) {
-      next(error); // let your error middleware handle it
-    }
-
+    res.status(200).json(allStaycation);
+  } catch (error) {
+    next(error); // let your error middleware handle it
+  }
 };
 
 exports.allVerifiedListing = async (req, res, next) => {
@@ -110,7 +112,7 @@ exports.oneListing = async (req, res, next) => {
     const staycation = await prisma.staycation.findUnique({
       where: { id: parseInt(staycationId, 10) },
       include: {
-        rooms: true, 
+        rooms: true,
         host: true,
       },
     });
@@ -165,7 +167,7 @@ exports.removeListing = async (req, res, next) => {
 exports.socialMedia = async (req, res, next) => {
 
   const { staycationId } = req.params;
-  const {  name, code } = req.body
+  const { name, code } = req.body
 
   try {
     const staycation = await prisma.staycation.findUnique({
@@ -237,7 +239,7 @@ exports.editor = async (req, res, next) => {
         numberOfRoom: newNumberOfRoom,
       },
       include: {
-        rooms: true, 
+        rooms: true,
       },
     });
 
@@ -391,4 +393,4 @@ exports.editorRoomImage = [
 
 
 
-  
+
