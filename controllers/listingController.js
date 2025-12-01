@@ -152,14 +152,17 @@ exports.removeListing = async (req, res, next) => {
       return res.status(404).json({ message: "Listing not found" });
     }
 
-    // If you want to remove rooms first (if no cascade rule exists in schema)
-    if (staycation.rooms.length > 0) {
-      await prisma.room.deleteMany({
-        where: { staycationId: id },
-      });
-    }
+    // Delete traffic records first
+    await prisma.traffic.deleteMany({
+      where: { staycationId: id },
+    });
 
-    // Remove the staycation itself
+    // Delete rooms
+    await prisma.room.deleteMany({
+      where: { staycationId: id },
+    });
+
+    // Delete the staycation
     await prisma.staycation.delete({
       where: { id },
     });
