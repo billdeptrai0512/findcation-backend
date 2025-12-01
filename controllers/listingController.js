@@ -1,22 +1,17 @@
 const prisma = require('../prisma/client')
 const multer = require("multer")
+const sharp = require("sharp");
 const path = require("path")
 const fs = require("fs");
 const { sendVerifyEmail } = require("../utils/sendEmail")
 const { syncRooms } = require("../utils/roomManager");
 
-const storage = multer.diskStorage({
-  destination: "./assets/staycations",
-  filename: (req, file, cb) => {
-    cb(null, Date.now() + path.extname(file.originalname));
-  }
-});
-
+const storage = multer.memoryStorage();
 const upload = multer({ storage });
 
 exports.newListing = [
   upload.array("images"), // handle files first
-  async (req, res, next) => {
+  async (req, res) => {
     try {
       // Parse JSON fields sent in FormData
       const listing = JSON.parse(req.body.listing);
@@ -24,7 +19,19 @@ exports.newListing = [
       const email = req.body.email
 
       // const URL = process.env.DB_URL || "http://localhost:3000"; we call backend url with file name on front end so save only name and path is fine
-      const savedImages = req.files.map(file => `/assets/staycations/${file.filename}`);
+      const savedImages = await Promise.all(
+        req.files.map(async (file) => {
+          const newFilename = Date.now() + ".webp";
+          const newFilepath = path.join("./assets/staycations", newFilename);
+
+          await sharp(file.buffer)
+            .webp({ quality: 80 })
+            .toFile(newFilepath);
+
+          return `/assets/staycations/${newFilename}`;
+        })
+      );
+
       listing.images = savedImages;
 
       console.log(listing)
@@ -282,8 +289,17 @@ exports.editorImage = [
         : [];
 
       // Newly uploaded files
-      const uploadedImages = req.files.map(
-        (file) => `/assets/staycations/${file.filename}`
+      const uploadedImages = await Promise.all(
+        req.files.map(async (file) => {
+          const newFilename = Date.now() + ".webp";
+          const newFilepath = path.join("./assets/staycations", newFilename);
+
+          await sharp(file.buffer)
+            .webp({ quality: 80 })
+            .toFile(newFilepath);
+
+          return `/assets/staycations/${newFilename}`;
+        })
       );
 
       const finalImages = [...keptImages, ...uploadedImages];
