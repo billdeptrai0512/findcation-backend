@@ -10,10 +10,10 @@ function runScript(scriptPath) {
   });
 }
 
-cron.schedule("0 0 * * 0", () => {
-  console.log("🧹 Running weekly image cleanup...");
-  runScript(path.join(__dirname, "utils/cleanUnusedImages.js"));
-});
+// cron.schedule("0 0 * * 0", () => {
+//   console.log("🧹 Running weekly image cleanup...");
+//   runScript(path.join(__dirname, "utils/cleanUnusedImages.js"));
+// });
 
 cron.schedule("5 0 * * 0", () => {
   console.log("📧 Sending weekly traffic report...");
