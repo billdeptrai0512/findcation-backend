@@ -24,28 +24,30 @@ exports.allSuggestion = async (req, res, next) => {
 };
 
 exports.newSuggestion = async (req, res, next) => {
+  try {
+    const { message, stage, user } = req.body;
 
-    try {
-        const { message, stage, user } = req.body;
-
-        const userId = user.id;
-
-        if (!message || !userId) {
-          return res.status(400).json({ error: "Missing message or user" });
-        }
-
-        const newSuggestion = await prisma.suggestion.create({
-            data: {
-                message,
-                stage,
-                userId
-            }
-        });
-
-        console.log(newSuggestion)
-
-        res.status(201).json(newSuggestion);
-    } catch (error) {
-        next(error);
+    if (!message) {
+      return res.status(400).json({ error: "Missing message" });
     }
-  };
+
+    // Nếu có user và có id → dùng nó, nếu không thì null
+    const userId = user?.id ?? null;
+
+    const newSuggestion = await prisma.suggestion.create({
+      data: {
+        message,
+        stage,
+        ...(userId && {   // chỉ connect khi có userId
+          user: {
+            connect: { id: userId }
+          }
+        })
+      }
+    });
+
+    res.status(201).json(newSuggestion);
+  } catch (error) {
+    next(error);
+  }
+};

@@ -3,6 +3,7 @@ require('dotenv').config();
 require('./passport');
 const express = require("express");
 const cors = require("cors")
+const compression = require("compression");
 const cookieParser = require('cookie-parser');
 const path = require('path');
 
@@ -15,7 +16,7 @@ app.use(cors({
 app.use(express.json())
 app.use(cookieParser())
 app.use(express.urlencoded({ extended: true }));
-
+app.use(compression());
 // Static assets
 app.use('/assets', express.static(path.join(__dirname, 'assets')));
 app.use('/assets/avatar', express.static(path.join(__dirname, 'assets/avatar')));
