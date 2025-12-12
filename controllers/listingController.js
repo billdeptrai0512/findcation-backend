@@ -34,8 +34,6 @@ exports.newListing = [
 
       listing.images = savedImages;
 
-      console.log(listing)
-
       const newStaycation = await prisma.staycation.create({
         data: {
           ...listing,
@@ -306,6 +304,8 @@ exports.editorImage = [
       );
 
       const finalImages = [...keptImages, ...uploadedImages];
+
+      console.log(finalImages)
 
       // 3. Delete files that are in oldImages but not in finalImages
       const toDelete = oldImages.filter((img) => !finalImages.includes(img));
