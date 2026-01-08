@@ -1,21 +1,21 @@
-const { getWeeklyTrafficStats, sendPerformanceEmail } = require("./traffic");
+const { getWeeklyTrafficStats, sendPerformanceEmail } = require("./weeklyPerformanceContent");
 const prisma = require("../../prisma/client");
 
 (async function () {
-    try {
+  try {
 
-        const hosts = await prisma.user.findMany({
-            where: {
-                staycations: {
-                some: {}     // means: at least one staycation exists
-                }
-            },
-            select: {
-                id: true,
-                email: true,
-                staycations: true,
-            }
-        });
+    const hosts = await prisma.user.findMany({
+      where: {
+        staycations: {
+          some: {}     // means: at least one staycation exists
+        }
+      },
+      select: {
+        id: true,
+        email: true,
+        staycations: true,
+      }
+    });
 
     for (const host of hosts) {
       const stats = await getWeeklyTrafficStats(host.id);

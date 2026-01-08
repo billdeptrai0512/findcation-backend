@@ -1,12 +1,13 @@
-const prisma = require('../prisma/client')
+const prisma = require('../prisma/client');
+const { getWeeklyTrafficStats, sendPerformanceEmail } = require('../utils/email/weeklyPerformanceContent');
 
 exports.getAllTraffic = async (req, res) => {
   try {
     const traffic = await prisma.traffic.findMany({
-        include: {
-            staycation: true
-        },
-        orderBy: { date: "desc" }
+      include: {
+        staycation: true
+      },
+      orderBy: { createdAt: "desc" }
     });
 
     res.json(traffic);
@@ -16,40 +17,29 @@ exports.getAllTraffic = async (req, res) => {
   }
 };
 
-exports.recordStaycationClick = async (req, res) => {
-  const { contactType } = req.body;
-  console.log(contactType)
-  const staycationId = Number(req.params.staycationId); // ✅ convert to number
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
+exports.recordTraffic = async (req, res) => {
+  const staycationId = Number(req.params.staycationId);
+  const { trafficType, platform, sessionId } = req.body;
 
   try {
-    // Upsert traffic record for today
-    await prisma.traffic.upsert({
-      where: {
-        staycationId_platform_date: {
-          staycationId: staycationId,
-          platform: contactType,
-          date: today,
-        },
-      },
-      update: {
-        clicks: { increment: 1 },
-      },
-      create: {
+    // Upsert daily traffic record for today
+    await prisma.traffic.create({
+      data: {
         staycationId: staycationId,
-        platform: contactType,
-        date: today,
-        clicks: 1,
-      },
+        sessionId: sessionId,
+
+        trafficType: trafficType,
+        platform: platform,
+      }
     });
 
     res.json({ success: true });
   } catch (e) {
     console.error(e);
-    res.status(500).json({ error: 'Failed to record click' });
+    res.status(500).json({ error: 'Failed to record view' });
   }
 };
+
 
 exports.sendWeeklyPerformance = async (req, res) => {
   const hostId = Number(req.params.hostId);
@@ -75,4 +65,4 @@ exports.sendWeeklyPerformance = async (req, res) => {
 
 
 
-  
+

@@ -20,8 +20,8 @@ exports.newListing = [
 
       // const URL = process.env.DB_URL || "http://localhost:3000"; we call backend url with file name on front end so save only name and path is fine
       const savedImages = await Promise.all(
-        req.files.map(async (file) => {
-          const newFilename = Date.now() + ".webp";
+        req.files.map(async (file, index) => {
+          const newFilename = `${Date.now()}_${index}.webp`;
           const newFilepath = path.join("./assets/staycations", newFilename);
 
           await sharp(file.buffer)
@@ -291,8 +291,8 @@ exports.editorImage = [
 
       // Newly uploaded files
       const uploadedImages = await Promise.all(
-        req.files.map(async (file) => {
-          const newFilename = Date.now() + ".webp";
+        req.files.map(async (file, index) => {
+          const newFilename = `${Date.now()}_${index}.webp`;
           const newFilepath = path.join("./assets/staycations", newFilename);
 
           await sharp(file.buffer)

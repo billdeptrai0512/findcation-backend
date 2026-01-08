@@ -73,24 +73,54 @@ model Staycation {
   host   User @relation(fields: [hostId], references: [id])
 
   traffic Traffic[]
+  dailyTraffics DailyTraffic[]
 }
 
-enum ContactType {
+enum TrafficType {
+  VIEW
+  CONTACT_CLICK 
+  CONTACT_WARNING_SHOWN
+  CONTACT_CONTINUE
+  CONTACT_SUCCESS
+}
+
+enum Platform {
+  NULL
   ZALO
   FACEBOOK
   INSTAGRAM
 }
 
 model Traffic {
-  id            Int       @id @default(autoincrement())
+  id            Int          @id @default(autoincrement())
   staycationId  Int
   staycation    Staycation @relation(fields: [staycationId], references: [id])
 
-  platform      ContactType
-  date          DateTime
-  clicks        Int          @default(0)
+  sessionId String?
+  trafficType   TrafficType?
+  platform      Platform?
 
-  @@unique([staycationId, platform, date]) // unique per day per platform per staycation
+  createdAt          DateTime @default(now())
+
+  @@index([staycationId, trafficType, createdAt])
+  @@index([createdAt])
+}
+
+model DailyTraffic {
+  id Int @id @default(autoincrement())
+
+  staycationId  Int
+  staycation    Staycation @relation(fields: [staycationId], references: [id])
+
+  date DateTime
+
+  views Int @default(0)
+  clicks Int @default(0)
+  warnings Int @default(0)
+  continues Int @default(0)
+  successes Int @default(0)
+
+  @@unique([staycationId, date])
 }
 
 model Room {
