@@ -50,7 +50,7 @@ app.use(cors({
 }));
 
 // Explicit preflight support
-app.options('*', cors());
+app.options('/.*', cors());
 
 // Request logging
 app.use(requestLogger);
