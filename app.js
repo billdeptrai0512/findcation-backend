@@ -16,6 +16,9 @@ const logger = require('./utils/logger');
 
 const app = express();
 
+// Trust proxy - required for express-rate-limit to work correctly behind Nginx
+app.set('trust proxy', 1);
+
 // Security: Helmet for security headers
 app.use(helmet({
     contentSecurityPolicy: false, // Disable if serving static files
