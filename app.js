@@ -27,7 +27,9 @@ const allowedOrigins = process.env.ALLOWED_ORIGINS
     ? process.env.ALLOWED_ORIGINS.split(',').map(origin => origin.trim())
     : ['http://localhost:3000', 'http://localhost:5173']; // Default for development
 
-if (process.env.NODE_ENV === 'development') {
+// Only enable CORS middleware in non-production environments
+// In production, NGINX handles CORS to avoid header conflicts
+if (process.env.NODE_ENV !== 'production') {
     app.use(cors({
         origin: (origin, callback) => {
             // Allow requests with no origin (mobile apps, Postman, etc.)
@@ -44,6 +46,9 @@ if (process.env.NODE_ENV === 'development') {
         methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH'],
         allowedHeaders: ['Content-Type', 'Authorization'],
     }));
+    logger.info('🔓 CORS enabled via Express (development mode)');
+} else {
+    logger.info('🔓 CORS handled by NGINX (production mode)');
 }
 
 // Request logging
