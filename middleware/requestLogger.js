@@ -12,18 +12,13 @@ const skip = (req) => {
 };
 
 // Custom Morgan token for response time in ms
-morgan.token('response-time-ms', (req, res) => {
-    if (!req._startTime) return '-';
-    const diff = process.hrtime(req._startTime);
-    const ms = diff[0] * 1e3 + diff[1] * 1e-6;
-    return ms.toFixed(2);
-});
+const developmentFormat =
+    ':method :url :status :response-time ms - :res[content-length]';
 
-// Morgan format for development
-const developmentFormat = ':method :url :status :response-time ms - :res[content-length]';
+const productionFormat =
+    ':remote-addr - :remote-user [:date[clf]] ":method :url HTTP/:http-version" ' +
+    ':status :res[content-length] ":referrer" ":user-agent" :response-time ms';
 
-// Morgan format for production (more detailed)
-const productionFormat = ':remote-addr - :remote-user [:date[clf]] ":method :url HTTP/:http-version" :status :res[content-length] ":referrer" ":user-agent" :response-time-ms ms';
 
 // Create middleware based on environment
 const requestLogger = morgan(
