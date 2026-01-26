@@ -49,9 +49,6 @@ app.use(cors({
     allowedHeaders: ['Content-Type', 'Authorization'],
 }));
 
-// Explicit preflight support
-app.options('/.*/', cors());
-
 // Request logging
 app.use(requestLogger);
 
