@@ -1,18 +1,22 @@
 const express = require('express');
-const authRouter = express.Router()
-const authController = require("../controllers/authController")
+const authRouter = express.Router();
+const authController = require("../controllers/authController");
 const jwtAuth = require("../middleware/jwtAuth");
+const { authLimiter } = require("../middleware/rateLimiter");
 
+// Public routes with rate limiting
+authRouter.post("/login", authLimiter, authController.userLogin);
+authRouter.post("/google", authLimiter, authController.userLoginGoogle);
+authRouter.post("/register", authLimiter, authController.userRegister);
 
-// authRouter.get("/", authController.verifyAuth)
+// Protected routes
 authRouter.get("/me", jwtAuth, authController.userRefresh);
-authRouter.get("/:hostId", authController.userProfile)
-authRouter.post("/login", authController.userLogin);
 authRouter.post("/logout", authController.userLogout);
-authRouter.post("/google", authController.userLoginGoogle);
-authRouter.post("/register", authController.userRegister);
-authRouter.patch("/contact/:hostId", authController.userContact);
 
+// Public profile view
+authRouter.get("/:hostId", authController.userProfile);
 
+// Protected contact update
+authRouter.patch("/contact/:hostId", jwtAuth, authController.userContact);
 
 module.exports = authRouter;

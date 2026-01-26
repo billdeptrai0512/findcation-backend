@@ -1,22 +1,18 @@
 const express = require('express');
-const loginRouter = express.Router()
-const loginController = require("../controllers/loginController")
+const loginRouter = express.Router();
+const loginController = require("../controllers/loginController");
+const { authLimiter } = require("../middleware/rateLimiter");
 
-loginRouter.post("/email", loginController.checkEmail);
+// All login-related routes should have rate limiting to prevent brute force
+loginRouter.post("/email", authLimiter, loginController.checkEmail);
 
-loginRouter.post("/forgot-password", loginController.verifyEmail);
-loginRouter.post("/reset-password", loginController.updatePassword);
+loginRouter.post("/forgot-password", authLimiter, loginController.verifyEmail);
+loginRouter.post("/reset-password", authLimiter, loginController.updatePassword);
 
-loginRouter.post("/new-email", loginController.newEmail);
-loginRouter.post("/change-email", loginController.changeEmail);
+loginRouter.post("/new-email", authLimiter, loginController.newEmail);
+loginRouter.post("/change-email", authLimiter, loginController.changeEmail);
 
-loginRouter.post("/change-password", loginController.changePassword);
-loginRouter.post("/verify-pin", loginController.verifyPinCode);
-
-//register via email ?
-//forgot password ?
-//verify email ?
-
-
+loginRouter.post("/change-password", authLimiter, loginController.changePassword);
+loginRouter.post("/verify-pin", authLimiter, loginController.verifyPinCode);
 
 module.exports = loginRouter;

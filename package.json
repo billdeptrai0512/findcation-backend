@@ -1,12 +1,29 @@
 {
   "name": "backend-findcation",
   "version": "1.0.0",
-  "description": "",
+  "description": "Findcation - Staycation listing platform with traffic analytics",
   "main": "app.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "start": "node app.js",
+    "dev": "nodemon app.js",
+    "cron": "node cron.js",
+    "migrate": "npx prisma migrate dev",
+    "migrate:deploy": "npx prisma migrate deploy",
+    "migrate:reset": "npx prisma migrate reset",
+    "studio": "npx prisma studio",
+    "generate": "npx prisma generate",
+    "db:push": "npx prisma db push",
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "audit": "npm audit",
+    "audit:fix": "npm audit fix"
   },
-  "keywords": [],
+  "keywords": [
+    "staycation",
+    "listing",
+    "analytics",
+    "express",
+    "prisma"
+  ],
   "author": "",
   "license": "ISC",
   "type": "commonjs",
@@ -23,10 +40,13 @@
     "date-fns": "^4.1.0",
     "dotenv": "^17.2.0",
     "express": "^5.1.0",
+    "express-rate-limit": "^7.5.0",
     "express-session": "^1.18.1",
     "express-validator": "^7.2.1",
     "google-auth-library": "^10.1.0",
+    "helmet": "^8.0.0",
     "jsonwebtoken": "^9.0.2",
+    "morgan": "^1.10.0",
     "multer": "^2.0.2",
     "node-cron": "^4.2.1",
     "nodemailer": "^7.0.5",
@@ -36,9 +56,11 @@
     "patch-package": "^8.0.1",
     "pg": "^8.16.3",
     "postinstall-postinstall": "^2.1.0",
-    "sharp": "^0.34.5"
+    "sharp": "^0.34.5",
+    "winston": "^3.17.0"
   },
   "devDependencies": {
+    "nodemon": "^3.1.11",
     "prisma": "^6.19.0"
   }
 }
