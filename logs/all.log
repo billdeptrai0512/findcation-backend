@@ -73,3 +73,19 @@
 2026-01-26 16:20:42 [35mhttp[39m: [35mGET /listing/staycation/13 304 2.764 ms - -[39m
 2026-01-26 16:20:42 [35mhttp[39m: [35mGET /listing/staycation/13 304 2.608 ms - -[39m
 2026-01-26 16:20:42 [35mhttp[39m: [35mGET /listing/staycation/13 304 3.043 ms - -[39m
+2026-01-26 17:05:30 [33mwarn[39m: [33m⚠️  JWT_SECRET should be at least 32 characters for security![39m
+2026-01-26 17:05:30 [32minfo[39m: [32m🚀 Express app listening on port 3333[39m
+2026-01-26 17:05:30 [32minfo[39m: [32m📝 Environment: development[39m
+2026-01-26 17:05:30 [32minfo[39m: [32m🔒 CORS allowed origins: http://localhost:3000, http://localhost:5173[39m
+2026-01-26 17:05:43 [33mwarn[39m: [33m⚠️  JWT_SECRET should be at least 32 characters for security![39m
+2026-01-26 17:05:43 [32minfo[39m: [32m🚀 Express app listening on port 3333[39m
+2026-01-26 17:05:43 [32minfo[39m: [32m📝 Environment: development[39m
+2026-01-26 17:05:43 [32minfo[39m: [32m🔒 CORS allowed origins: http://localhost:3000, http://localhost:5173[39m
+2026-01-26 17:05:48 [35mhttp[39m: [35mGET /assets/geo/vn_islands.geojson 304 2.601 ms - -[39m
+2026-01-26 17:05:48 [35mhttp[39m: [35mGET /assets/geo/vn_islands.geojson 304 0.723 ms - -[39m
+2026-01-26 17:05:48 [34mdebug[39m: [34mUser 1 authenticated for GET /auth/me[39m
+2026-01-26 17:05:48 [35mhttp[39m: [35mGET /auth/me 304 6.463 ms - -[39m
+2026-01-26 17:05:48 [34mdebug[39m: [34mUser 1 authenticated for GET /auth/me[39m
+2026-01-26 17:05:48 [35mhttp[39m: [35mGET /auth/me 304 1.834 ms - -[39m
+2026-01-26 17:05:48 [35mhttp[39m: [35mGET /listing/all-listing 304 64.270 ms - -[39m
+2026-01-26 17:05:48 [35mhttp[39m: [35mGET /listing/all-listing 304 4.370 ms - -[39m
