@@ -33,27 +33,24 @@ const allowedOrigins = process.env.ALLOWED_ORIGINS
 
 // Only enable CORS middleware in non-production environments
 // In production, NGINX handles CORS to avoid header conflicts
-if (process.env.NODE_ENV !== 'production') {
-    app.use(cors({
-        origin: (origin, callback) => {
-            // Allow requests with no origin (mobile apps, Postman, etc.)
-            if (!origin) return callback(null, true);
+app.use(cors({
+    origin: (origin, callback) => {
+        if (!origin) return callback(null, true);
 
-            if (allowedOrigins.includes(origin)) {
-                callback(null, true);
-            } else {
-                logger.warn(`CORS blocked request from origin: ${origin}`);
-                callback(new Error('Not allowed by CORS'));
-            }
-        },
-        credentials: true,
-        methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH'],
-        allowedHeaders: ['Content-Type', 'Authorization'],
-    }));
-    logger.info('🔓 CORS enabled via Express (development mode)');
-} else {
-    logger.info('🔓 CORS handled by NGINX (production mode)');
-}
+        if (allowedOrigins.includes(origin)) {
+            callback(null, true);
+        } else {
+            logger.warn(`CORS blocked request from origin: ${origin}`);
+            callback(new Error('Not allowed by CORS'));
+        }
+    },
+    credentials: true,
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization'],
+}));
+
+// Explicit preflight support
+app.options('*', cors());
 
 // Request logging
 app.use(requestLogger);
