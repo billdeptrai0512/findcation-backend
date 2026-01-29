@@ -49,6 +49,7 @@ async function aggregateTraffic(targetDate = null) {
                 views: 0,
                 clicks: 0,
                 warnings: 0,
+                cancel: 0,
                 continues: 0,
                 successes: 0,
             };
@@ -57,6 +58,7 @@ async function aggregateTraffic(targetDate = null) {
         if (types.has('VIEW')) stats[staycationId].views++;
         if (types.has('CONTACT_CLICK')) stats[staycationId].clicks++;
         if (types.has('CONTACT_WARNING_SHOWN')) stats[staycationId].warnings++;
+        if (types.has('CONTACT_WARNING_CANCEL')) stats[staycationId].cancel++;
         if (types.has('CONTACT_CONTINUE')) stats[staycationId].continues++;
         if (types.has('CONTACT_SUCCESS')) stats[staycationId].successes++;
     }

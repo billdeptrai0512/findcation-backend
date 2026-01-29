@@ -130,6 +130,7 @@ model DailyTraffic {
   views Int @default(0)
   clicks Int @default(0)
   warnings Int @default(0)
+  cancel Int @default(0)
   continues Int @default(0)
   successes Int @default(0)
 

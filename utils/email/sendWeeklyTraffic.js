@@ -13,6 +13,7 @@ const prisma = require("../../prisma/client");
       select: {
         id: true,
         email: true,
+        name: true,
         staycations: true,
       }
     });
