@@ -5,6 +5,7 @@ const path = require("path")
 const fs = require("fs");
 const { sendVerifyEmail } = require("../utils/sendEmail")
 const { syncRooms } = require("../utils/roomManager");
+const logger = require("../utils/logger");
 
 const storage = multer.memoryStorage();
 const upload = multer({ storage });
@@ -41,7 +42,7 @@ exports.newListing = [
         }
       });
 
-      console.log("New staycation created:", newStaycation);
+      logger.info(`New staycation created: ${newStaycation.id}`);
 
       if (listing.numberOfRoom && listing.numberOfRoom > 0) {
         const roomsData = Array.from({ length: listing.numberOfRoom }).map(
@@ -55,7 +56,7 @@ exports.newListing = [
           data: roomsData,
         });
 
-        console.log(`Created ${listing.numberOfRoom} rooms`);
+        logger.info(`Created ${listing.numberOfRoom} rooms for staycation ${newStaycation.id}`);
       }
 
       // it get the user's email and send to it
@@ -77,7 +78,7 @@ exports.allListing = async (req, res, next) => {
       },
     });
 
-    console.log("total listing " + allStaycation.length);
+    logger.info(`Total listings retrieved: ${allStaycation.length}`);
 
     res.status(200).json(allStaycation);
   } catch (error) {
@@ -100,7 +101,7 @@ exports.allVerifiedListing = async (req, res, next) => {
       );
     });
 
-    console.log("number verified listing " + verifiedStaycations.length);
+    logger.info(`Number of verified listings: ${verifiedStaycations.length}`);
 
     res.status(200).json(verifiedStaycations);
   } catch (error) {

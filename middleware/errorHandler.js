@@ -96,6 +96,18 @@ const errorHandler = (err, req, res, next) => {
 
 // 404 handler
 const notFoundHandler = (req, res, next) => {
+    const noisyRoutes = ['/sitemap.xml', '/.env', '/enhancecp'];
+    const isNoisy = noisyRoutes.some(route => req.originalUrl.includes(route));
+
+    if (isNoisy) {
+        // Return 404 but don't log as error to keep PM2 logs clean
+        return res.status(404).json({
+            status: 'error',
+            message: `Route ${req.originalUrl} not found`,
+            errorCode: 'NOT_FOUND',
+        });
+    }
+
     const error = new AppError(`Route ${req.originalUrl} not found`, 404, 'NOT_FOUND');
     next(error);
 };

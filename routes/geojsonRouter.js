@@ -4,6 +4,7 @@ const geojsonController = require("../controllers/geojsonController")
 
 
 geojsonRouter.get("/", geojsonController.islandGeoJSON);
+geojsonRouter.get("/location", geojsonController.getLocationFromIP);
 //get all listing 
 
 

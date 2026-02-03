@@ -6,7 +6,7 @@ function jwtAuth(req, res, next) {
   const token = req.cookies.token;
 
   if (!token) {
-    logger.warn(`Unauthorized access attempt to ${req.originalUrl} from ${req.ip}`);
+    logger.info(`Unauthorized access attempt to ${req.originalUrl} from ${req.ip}`);
     return res.status(401).json({
       status: 'error',
       message: 'Authentication required',
