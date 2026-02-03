@@ -3,5 +3,5 @@ node_modules
 .env
 /assets
 /generated/prisma
-logs/
+/logs/
 *.log

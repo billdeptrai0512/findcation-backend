@@ -17,8 +17,9 @@ const logger = require('./utils/logger');
 const app = express();
 
 // Trust proxy - required for express-rate-limit to work correctly behind Nginx
-app.set('trust proxy', true);
-logger.info('🛡️ Trust proxy enabled');
+// Set to 1 to trust the first proxy (e.g. Nginx)
+app.set('trust proxy', 1);
+logger.info('🛡️ Trust proxy enabled (1 hop)');
 
 // Security: Helmet for security headers
 app.use(helmet({
@@ -76,6 +77,16 @@ app.get('/health', (req, res) => {
         timestamp: new Date().toISOString(),
         uptime: process.uptime(),
     });
+});
+
+// Serve logo as favicon to stop 404s in logs and show branding
+app.get('/favicon.ico', (req, res) => {
+    res.sendFile(path.join(__dirname, 'assets', 'logo.png'));
+});
+
+// Basic robots.txt for SEO
+app.get('/robots.txt', (req, res) => {
+    res.sendFile(path.join(__dirname, 'assets', 'robots.txt'));
 });
 
 // Routers
