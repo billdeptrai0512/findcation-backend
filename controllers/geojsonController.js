@@ -78,12 +78,74 @@ exports.getLocationFromIP = (req, res) => {
   // Look up city in our table, fallback to GeoIP coords
   const coords = getCityCoords(geo.city);
 
+  // Debug logging - will help diagnose city matching issues
+  if (coords) {
+    logger.debug(`City "${geo.city}" matched in lookup table → [${coords[0]}, ${coords[1]}]`);
+  } else {
+    logger.warn(`City "${geo.city}" NOT found in lookup table, falling back to GeoIP coords: ${geo.ll}`);
+  }
+
   res.json({
     source: "IP",
     confidence: "LOW",
     city: geo.city || null,
     region: geo.region || null,
     location: coords || geo.ll || null,
+  });
+};
+
+// ========== DEBUG/TEST ENDPOINT ==========
+// Use this to test city matching without needing actual IPs
+// Example: GET /api/geojson/test-location?ip=183.80.181.33&city=Hanoi
+exports.testLocationLookup = (req, res) => {
+  const { ip, city } = req.query;
+
+  // Test city lookup
+  if (city) {
+    const coords = getCityCoords(city);
+    return res.json({
+      test: "CITY_LOOKUP",
+      input: city,
+      normalizedInput: normalize(city),
+      found: !!coords,
+      coords: coords,
+      allCities: Object.keys(VIETNAM_CITY_CENTERS).slice(0, 10), // Show first 10 for reference
+      tip: coords ? "✅ City matched!" : "❌ City not found in lookup table"
+    });
+  }
+
+  // Test IP lookup
+  if (ip) {
+    const geo = geoip.lookup(ip);
+    const coords = geo?.city ? getCityCoords(geo.city) : null;
+
+    return res.json({
+      test: "IP_LOOKUP",
+      input: ip,
+      geoResult: geo ? {
+        country: geo.country,
+        region: geo.region,
+        city: geo.city,
+        ll: geo.ll
+      } : null,
+      cityLookup: {
+        city: geo?.city,
+        found: !!coords,
+        coords: coords,
+        fallback: geo?.ll
+      },
+      finalLocation: coords || geo?.ll || null,
+      tip: geo ? (coords ? "✅ City matched in table!" : "⚠️ Using GeoIP fallback coords") : "❌ GeoIP lookup failed"
+    });
+  }
+
+  return res.json({
+    test: "HELP",
+    usage: [
+      "GET /api/geojson/test-location?city=Hanoi - Test city name matching",
+      "GET /api/geojson/test-location?ip=183.80.181.33 - Test IP lookup"
+    ],
+    availableCities: Object.keys(VIETNAM_CITY_CENTERS)
   });
 };
 
