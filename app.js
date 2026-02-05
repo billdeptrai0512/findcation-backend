@@ -16,24 +16,13 @@ const logger = require('./utils/logger');
 
 const app = express();
 
-// Trust proxy - required for express-rate-limit to work correctly behind Nginx
-// Set to 1 to trust the first proxy (e.g. Nginx)
-app.set('trust proxy', 1);
-logger.info('🛡️ Trust proxy enabled (1 hop)');
-
-// Security: Helmet for security headers
-app.use(helmet({
-    contentSecurityPolicy: false, // Disable if serving static files
-    crossOriginEmbedderPolicy: false,
-}));
-
 // CORS Configuration - Use environment variable for allowed origins
 const allowedOrigins = process.env.ALLOWED_ORIGINS
     ? process.env.ALLOWED_ORIGINS.split(',').map(origin => origin.trim())
     : ['http://localhost:3000', 'http://localhost:5173']; // Default for development
 
-// Handle OPTIONS preflight requests FIRST using middleware
-// This ensures CORS headers are always set before any auth middleware can reject the request
+// Handle OPTIONS preflight requests FIRST - MUST be before any other middleware
+// This ensures CORS headers are always set before Helmet or auth can interfere
 app.use((req, res, next) => {
     if (req.method === 'OPTIONS') {
         const origin = req.headers.origin;
@@ -66,6 +55,17 @@ app.use(cors({
     credentials: true,
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
     allowedHeaders: ['Content-Type', 'Authorization'],
+}));
+
+// Trust proxy - required for express-rate-limit to work correctly behind Nginx
+// Set to 1 to trust the first proxy (e.g. Nginx)
+app.set('trust proxy', 1);
+logger.info('🛡️ Trust proxy enabled (1 hop)');
+
+// Security: Helmet for security headers
+app.use(helmet({
+    contentSecurityPolicy: false, // Disable if serving static files
+    crossOriginEmbedderPolicy: false,
 }));
 
 // Request logging
