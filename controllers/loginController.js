@@ -2,7 +2,7 @@ const jwt = require('jsonwebtoken');
 const prisma = require('../prisma/client')
 const bcrypt = require('bcryptjs')
 const { sendResetEmail } = require('../utils/sendEmail');
-const otpStore = new Map(); 
+const otpStore = new Map();
 
 
 exports.checkEmail = async (req, res) => {
@@ -20,7 +20,7 @@ exports.checkEmail = async (req, res) => {
 
     if (user && user.password === null) {
         return res.status(200).json({ hasPassword: false, hasRegister: true }) //Use google to login once - show register form + google login
-    } 
+    }
 
     return res.status(200).json({ hasPassword: true, hasRegister: true }); // Show password field
 };
@@ -28,19 +28,19 @@ exports.checkEmail = async (req, res) => {
 exports.verifyEmail = async (req, res) => {
 
     const { email } = req.body;
-  
+
     const user = await prisma.user.findUnique({ where: { email } });
     if (!user) return res.status(404).json({ message: "Email not found" });
-  
+
     const token = jwt.sign({ id: user.id }, process.env.JWT_SECRET, { expiresIn: "15m" });
     const code = generate6DigitCode();
     const expiresAt = Date.now() + 5 * 60 * 1000;
-  
+
     otpStore.set(email, { code, token, expiresAt });
-  
+
     await sendResetEmail(email, code); // only send the 6-digit code
     console.log(code)
-    res.json({ message: "Reset code sent to email"});
+    res.json({ message: "Reset code sent to email" });
 
 };
 
@@ -117,6 +117,7 @@ exports.changeEmail = async (req, res) => {
             httpOnly: true,
             secure: process.env.NODE_ENV === "production",
             sameSite: process.env.NODE_ENV === "production" ? "None" : "Lax",
+            domain: process.env.NODE_ENV === "production" ? ".findcation.vn" : undefined,
             maxAge: 24 * 60 * 60 * 1000,
         });
 
@@ -126,7 +127,7 @@ exports.changeEmail = async (req, res) => {
         console.error("Error during email change:", err.name, err.message);
     }
 };
-  
+
 exports.verifyPinCode = async (req, res) => {
     const { email, code } = req.body;
 
@@ -147,7 +148,7 @@ exports.verifyPinCode = async (req, res) => {
     otpStore.delete(email);
     res.json({ token });
 };
-  
+
 exports.updatePassword = async (req, res) => {
 
     const { token, password } = req.body;
@@ -184,6 +185,7 @@ exports.updatePassword = async (req, res) => {
             httpOnly: true,
             secure: process.env.NODE_ENV === "production",
             sameSite: process.env.NODE_ENV === "production" ? "None" : "Lax",
+            domain: process.env.NODE_ENV === "production" ? ".findcation.vn" : undefined,
             maxAge: 24 * 60 * 60 * 1000,
         });
 
@@ -238,6 +240,7 @@ exports.changePassword = async (req, res) => {
             httpOnly: true,
             secure: process.env.NODE_ENV === "production",
             sameSite: process.env.NODE_ENV === "production" ? "None" : "Lax",
+            domain: process.env.NODE_ENV === "production" ? ".findcation.vn" : undefined,
             maxAge: 24 * 60 * 60 * 1000,
         });
 
@@ -254,9 +257,9 @@ exports.changePassword = async (req, res) => {
 function generate6DigitCode() {
     return Math.floor(100000 + Math.random() * 900000).toString(); // e.g., 123456
 }
-  
 
-  
+
+
 
 
 

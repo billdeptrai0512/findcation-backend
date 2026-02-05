@@ -57,6 +57,7 @@ exports.userLogin = (req, res, next) => {
         httpOnly: true,
         secure: process.env.NODE_ENV === "production",
         sameSite: process.env.NODE_ENV === "production" ? "None" : "Lax",
+        domain: process.env.NODE_ENV === "production" ? ".findcation.vn" : undefined,
         maxAge: 24 * 60 * 60 * 1000,
       });
 
@@ -133,6 +134,7 @@ exports.userLoginGoogle = async (req, res, next) => {
       httpOnly: true,
       secure: process.env.NODE_ENV === "production",
       sameSite: process.env.NODE_ENV === "production" ? "None" : "Lax",
+      domain: process.env.NODE_ENV === "production" ? ".findcation.vn" : undefined,
       maxAge: 24 * 60 * 60 * 1000,
     });
 
@@ -145,7 +147,12 @@ exports.userLoginGoogle = async (req, res, next) => {
 };
 
 exports.userLogout = (req, res) => {
-  res.clearCookie("token");
+  res.clearCookie("token", {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === "production",
+    sameSite: process.env.NODE_ENV === "production" ? "None" : "Lax",
+    domain: process.env.NODE_ENV === "production" ? ".findcation.vn" : undefined,
+  });
   res.sendStatus(200);
 };
 
@@ -199,6 +206,7 @@ exports.userRegister = async (req, res, next) => {
       httpOnly: true,
       secure: process.env.NODE_ENV === "production",
       sameSite: process.env.NODE_ENV === "production" ? "None" : "Lax",
+      domain: process.env.NODE_ENV === "production" ? ".findcation.vn" : undefined,
       maxAge: 24 * 60 * 60 * 1000,
     });
 
