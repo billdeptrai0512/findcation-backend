@@ -11,8 +11,24 @@ class AppError extends Error {
     }
 }
 
+// Helper to add CORS headers to error responses
+const setCorsHeaders = (req, res) => {
+    const origin = req.headers.origin;
+    const allowedOrigins = process.env.ALLOWED_ORIGINS
+        ? process.env.ALLOWED_ORIGINS.split(',').map(o => o.trim())
+        : ['http://localhost:3000', 'http://localhost:5173'];
+
+    if (origin && allowedOrigins.includes(origin)) {
+        res.header('Access-Control-Allow-Origin', origin);
+        res.header('Access-Control-Allow-Credentials', 'true');
+    }
+};
+
 // Global error handler middleware
 const errorHandler = (err, req, res, next) => {
+    // Always set CORS headers on error responses
+    setCorsHeaders(req, res);
+
     err.statusCode = err.statusCode || 500;
     err.status = err.status || 'error';
 
