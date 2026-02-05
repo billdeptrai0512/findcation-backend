@@ -32,20 +32,23 @@ const allowedOrigins = process.env.ALLOWED_ORIGINS
     ? process.env.ALLOWED_ORIGINS.split(',').map(origin => origin.trim())
     : ['http://localhost:3000', 'http://localhost:5173']; // Default for development
 
-// Handle OPTIONS preflight requests FIRST - this ensures CORS headers are always set
-// before any auth middleware can reject the request
-app.options('*', (req, res) => {
-    const origin = req.headers.origin;
-    if (origin && allowedOrigins.includes(origin)) {
-        res.header('Access-Control-Allow-Origin', origin);
-        res.header('Access-Control-Allow-Credentials', 'true');
-        res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, PATCH, OPTIONS');
-        res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization');
-        res.header('Access-Control-Max-Age', '86400'); // Cache preflight for 24 hours
-        return res.sendStatus(204);
+// Handle OPTIONS preflight requests FIRST using middleware
+// This ensures CORS headers are always set before any auth middleware can reject the request
+app.use((req, res, next) => {
+    if (req.method === 'OPTIONS') {
+        const origin = req.headers.origin;
+        if (origin && allowedOrigins.includes(origin)) {
+            res.header('Access-Control-Allow-Origin', origin);
+            res.header('Access-Control-Allow-Credentials', 'true');
+            res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, PATCH, OPTIONS');
+            res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+            res.header('Access-Control-Max-Age', '86400'); // Cache preflight for 24 hours
+            return res.sendStatus(204);
+        }
+        logger.warn(`CORS preflight blocked from origin: ${origin}`);
+        return res.sendStatus(403);
     }
-    logger.warn(`CORS preflight blocked from origin: ${origin}`);
-    return res.sendStatus(403);
+    next();
 });
 
 // CORS middleware for actual requests
