@@ -156,6 +156,11 @@ exports.removeListing = async (req, res, next) => {
       where: { staycationId: id },
     });
 
+    // Delete daily traffic aggregates
+    await prisma.dailyTraffic.deleteMany({
+      where: { staycationId: id },
+    });
+
     // Delete rooms
     await prisma.room.deleteMany({
       where: { staycationId: id },
@@ -291,10 +296,15 @@ exports.editorImage = [
         : [];
 
       // Newly uploaded files
+      const timestamp = Date.now();
+      console.log(`[editorImage] Received ${req.files.length} files to upload`);
+
       const uploadedImages = await Promise.all(
         req.files.map(async (file, index) => {
-          const newFilename = `${Date.now()}_${index}.webp`;
+          const newFilename = `${timestamp}_${index}_${file.originalname.replace(/\.[^/.]+$/, "")}.webp`;
           const newFilepath = path.join("./assets/staycations", newFilename);
+
+          console.log(`[editorImage] Processing file ${index}: ${file.originalname} -> ${newFilename}`);
 
           await sharp(file.buffer)
             .webp({ quality: 80 })
@@ -306,7 +316,7 @@ exports.editorImage = [
 
       const finalImages = [...keptImages, ...uploadedImages];
 
-      console.log(finalImages)
+      console.log(`[editorImage] Final images:`, finalImages);
 
       // 3. Delete files that are in oldImages but not in finalImages
       const toDelete = oldImages.filter((img) => !finalImages.includes(img));
