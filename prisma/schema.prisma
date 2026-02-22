@@ -39,7 +39,7 @@ model User {
   password String?
   email    String  @unique
   avatar   String?
-  contacts  Json?
+  contacts  Json?  // { "social": "0123456789", "verify": true  } - if changed refresh to fail
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -68,7 +68,8 @@ model Staycation {
   features String[]
   images   String[] 
 
-  verify Boolean @default(false) // this is for paid staycation
+  verify Boolean @default(false) // address verified by admin
+  active Boolean @default(false) // listing is live / visible to public
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -83,6 +84,7 @@ model Staycation {
 
   @@index([hostId])
   @@index([verify])
+  @@index([active])
   @@index([createdAt])
   @@index([type])
 }

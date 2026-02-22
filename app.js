@@ -115,6 +115,7 @@ const suggestion = require("./routes/suggestionRouter");
 const listing = require("./routes/listingRouter");
 const traffic = require("./routes/trafficRouter");
 const geojson = require("./routes/geojsonRouter");
+const admin = require("./routes/adminRouter");
 
 app.use("", map);
 app.use("/auth", auth);
@@ -123,6 +124,7 @@ app.use("/suggestion", suggestion);
 app.use("/listing", listing);
 app.use("/traffic", traffic);
 app.use("/geojson", geojson);
+app.use("/admin", admin);
 
 // 404 handler - must be after all routes
 app.use(notFoundHandler);

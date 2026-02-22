@@ -221,6 +221,10 @@ exports.userProfile = async (req, res, next) => {
 
   const { hostId } = req.params;
 
+  if (!hostId) {
+    return res.status(400).json({ message: "Host ID is required" });
+  }
+
   try {
     const user = await prisma.user.findUnique({
       where: { id: parseInt(hostId, 10) },
@@ -276,10 +280,24 @@ exports.userContact = async (req, res, next) => {
     // Parse existing contacts (could be null on first time)
     const currentContacts = user.contacts || {};
 
-    // Update only the selected type (e.g. facebook, zalo, etc.)
+    // Detect whether the handle actually changed
+    const existing = currentContacts[type];
+    const existingUrl = typeof existing === 'string' ? existing : existing?.url;
+
+    let updatedPlatform;
+    if (url !== existingUrl) {
+      // Handle changed → reset verification so admin must re-verify
+      updatedPlatform = { url, verify: false, code: null, codeExpiresAt: null };
+    } else {
+      // Same handle → preserve existing verify/code state, just normalise to object shape
+      updatedPlatform = typeof existing === 'object' && existing !== null
+        ? { ...existing, url }
+        : { url, verify: false, code: null, codeExpiresAt: null };
+    }
+
     const updatedContacts = {
       ...currentContacts,
-      [type]: url
+      [type]: updatedPlatform
     };
 
     const updatedUser = await prisma.user.update({
@@ -303,4 +321,39 @@ exports.userContact = async (req, res, next) => {
     next(error);
   }
 };
+
+exports.allHost = async (req, res, next) => {
+  try {
+    const users = await prisma.user.findMany({
+      where: { isAdmin: false },
+      select: {
+        id: true,
+        name: true,
+        email: true,
+        avatar: true,
+        contacts: true,
+        staycations: {
+          select: {
+            id: true,
+            name: true,
+            numberOfRoom: true,
+            type: true,
+            images: true,
+            location: true,
+            prices: true,
+            features: true,
+            rooms: true,
+            verify: true,
+            active: true,
+          },
+        },
+      },
+    });
+
+    return res.json(users);
+  } catch (error) {
+    console.error(error);
+    next(error);
+  }
+}
 
