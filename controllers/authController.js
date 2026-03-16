@@ -1,4 +1,3 @@
-const jwt = require("jsonwebtoken");
 const prisma = require('../prisma/client')
 const axios = require("axios");
 const passport = require('passport');
@@ -7,6 +6,8 @@ const fs = require("fs");
 const path = require("path")
 const { OAuth2Client } = require('google-auth-library');
 const client = new OAuth2Client(process.env.OAUTH_CLIENT_ID);
+const { setSessionCookie } = require('../utils/authHelper');
+
 
 exports.userRefresh = (req, res) => {
   if (req.user) {
@@ -16,57 +17,28 @@ exports.userRefresh = (req, res) => {
 }
 
 exports.userLogin = (req, res, next) => {
-  console.log('Login attempt');
-
   passport.authenticate('local', { session: false }, (err, user, info) => {
-    console.log("Inside passport.authenticate callback");
     if (err) {
       console.error('Passport error:', err);
-      return res.status(500).json({ message: 'Internal error', error: err });
+      return res.status(500).json({ message: 'Internal error' });
     }
 
     if (!user) {
-      console.warn('Invalid credentials:', info);
       return res.status(401).json({ message: info?.message || 'Invalid credentials' });
     }
 
-    console.log("User found:", user);
-
     req.login(user, { session: false }, (loginErr) => {
-      console.log("Inside req.login callback");
       if (loginErr) {
         console.error('Login error:', loginErr);
-        return res.status(500).json({ message: 'Login failed', error: loginErr });
+        return res.status(500).json({ message: 'Login failed' });
       }
 
-      console.log("req.user after login:", req.user);
-
-      // sign token & set cookie
-      const payload = {
-        id: user.id,
-        name: user.name,
-        email: user.email,
-        avatar: user.avatar,
-        isAdmin: user.isAdmin,
-        staycations: user.staycations
-      };
-
-      const token = jwt.sign(payload, process.env.JWT_SECRET, { expiresIn: '1d' });
-
-      res.cookie('token', token, {
-        httpOnly: true,
-        secure: process.env.NODE_ENV === "production",
-        sameSite: process.env.NODE_ENV === "production" ? "None" : "Lax",
-        domain: process.env.NODE_ENV === "production" ? ".findcation.vn" : undefined,
-        maxAge: 24 * 60 * 60 * 1000,
-      });
-
-      console.log('Cookie set successfully');
-
+      const payload = setSessionCookie(res, user);
       return res.json({ user: payload });
     });
   })(req, res, next);
 };
+
 
 exports.userLoginGoogle = async (req, res, next) => {
   const { credential } = req.body;
@@ -112,32 +84,13 @@ exports.userLoginGoogle = async (req, res, next) => {
           avatar: avatarRelativePath,
           contacts: { facebook: "", zalo: "", instagram: "" }
         },
+        include: {
+          staycations: true
+        }
       });
     }
 
-    const payloadUser = {
-      id: user.id,
-      name: user.name,
-      email: user.email,
-      avatar: user.avatar,
-      isAdmin: user.isAdmin,
-      staycations: user.staycations ? user.staycations : []
-    };
-
-    console.log(payloadUser)
-
-    const token = jwt.sign(payloadUser, process.env.JWT_SECRET, {
-      expiresIn: '1d',
-    });
-
-    res.cookie("token", token, {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === "production",
-      sameSite: process.env.NODE_ENV === "production" ? "None" : "Lax",
-      domain: process.env.NODE_ENV === "production" ? ".findcation.vn" : undefined,
-      maxAge: 24 * 60 * 60 * 1000,
-    });
-
+    const payloadUser = setSessionCookie(res, user);
     return res.json({ user: payloadUser });
 
   } catch (error) {
@@ -146,6 +99,7 @@ exports.userLoginGoogle = async (req, res, next) => {
   }
 };
 
+
 exports.userLogout = (req, res) => {
   res.clearCookie("token", {
     httpOnly: true,
@@ -153,15 +107,17 @@ exports.userLogout = (req, res) => {
     sameSite: process.env.NODE_ENV === "production" ? "None" : "Lax",
     domain: process.env.NODE_ENV === "production" ? ".findcation.vn" : undefined,
   });
-  res.sendStatus(200);
+  return res.status(200).json({ message: "Logged out successfully" });
 };
 
+
 exports.userRegister = async (req, res, next) => {
-  const { password, email, isAdmin } = req.body;
+  const { password, email } = req.body;
 
   try {
     const existingUser = await prisma.user.findUnique({
       where: { email },
+      include: { staycations: true }
     });
 
     const hashedPassword = await bcrypt.hash(password, 10);
@@ -170,52 +126,37 @@ exports.userRegister = async (req, res, next) => {
 
     if (existingUser) {
       if (existingUser.password) {
-        // Case: User already has password -> prevent duplicate register
         return res.status(400).json({ message: "Email already registered. Please login." });
       } else {
         // Case: Google account, no password yet -> update with new password
         user = await prisma.user.update({
           where: { email },
           data: { password: hashedPassword },
+          include: { staycations: true }
         });
       }
     } else {
-
       // Case: brand new user
       user = await prisma.user.create({
         data: {
           email,
           password: hashedPassword,
-          isAdmin: isAdmin || false,
+          isAdmin: false, // Security: Never allow client to set isAdmin
           contacts: { facebook: "", zalo: "", instagram: "" },
         },
+        include: { staycations: true }
       });
     }
 
-    const payload = {
-      id: user.id,
-      email: user.email,
-      avatar: user.avatar,
-      isAdmin: user.isAdmin,
-      staycations: user.staycations ? user.staycations : []
-    };
-
-    const token = jwt.sign(payload, process.env.JWT_SECRET, { expiresIn: "1d" });
-
-    res.cookie("token", token, {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === "production",
-      sameSite: process.env.NODE_ENV === "production" ? "None" : "Lax",
-      domain: process.env.NODE_ENV === "production" ? ".findcation.vn" : undefined,
-      maxAge: 24 * 60 * 60 * 1000,
-    });
-
+    const payload = setSessionCookie(res, user);
     return res.json({ user: payload });
+
   } catch (error) {
-    console.error(error);
+    console.error("Register error:", error);
     next(error);
   }
 };
+
 
 exports.userProfile = async (req, res, next) => {
 

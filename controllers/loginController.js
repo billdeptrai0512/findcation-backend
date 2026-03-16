@@ -1,7 +1,8 @@
-const jwt = require('jsonwebtoken');
 const prisma = require('../prisma/client')
 const bcrypt = require('bcryptjs')
 const { sendResetEmail } = require('../utils/sendEmail');
+const { setSessionCookie } = require('../utils/authHelper');
+
 const otpStore = new Map();
 
 
@@ -103,25 +104,9 @@ exports.changeEmail = async (req, res) => {
         otpStore.delete(newEmail);
 
         // 4️⃣ Issue new JWT (since email changed)
-        const payload = {
-            id: user.id,
-            name: user.name,
-            email: newEmail,
-            avatar: user.avatar,
-            isAdmin: user.isAdmin,
-        };
+        const payload = setSessionCookie(res, user);
+        return res.json({ message: "Đổi email thành công", user: payload });
 
-        const jwtToken = jwt.sign(payload, process.env.JWT_SECRET, { expiresIn: "1h" });
-
-        res.cookie("token", jwtToken, {
-            httpOnly: true,
-            secure: process.env.NODE_ENV === "production",
-            sameSite: process.env.NODE_ENV === "production" ? "None" : "Lax",
-            domain: process.env.NODE_ENV === "production" ? ".findcation.vn" : undefined,
-            maxAge: 24 * 60 * 60 * 1000,
-        });
-
-        return res.json({ message: "Đổi email thành công", user: payload, token: jwtToken });
 
     } catch (err) {
         console.error("Error during email change:", err.name, err.message);
@@ -171,25 +156,9 @@ exports.updatePassword = async (req, res) => {
             data: { password: hashedPassword }
         });
 
-        const payload = {
-            id: user.id,
-            name: user.name,
-            email: user.email,
-            avatar: user.avatar,
-            isAdmin: user.isAdmin,
-        };
+        const payload = setSessionCookie(res, user);
+        return res.json({ user: payload });
 
-        const jwtToken = jwt.sign(payload, process.env.JWT_SECRET, { expiresIn: "1h" });
-
-        res.cookie('token', jwtToken, {
-            httpOnly: true,
-            secure: process.env.NODE_ENV === "production",
-            sameSite: process.env.NODE_ENV === "production" ? "None" : "Lax",
-            domain: process.env.NODE_ENV === "production" ? ".findcation.vn" : undefined,
-            maxAge: 24 * 60 * 60 * 1000,
-        });
-
-        return res.json({ user: payload, token: jwtToken });
 
     } catch (err) {
         console.error("Error during password reset:", err.name, err.message);
@@ -226,25 +195,9 @@ exports.changePassword = async (req, res) => {
         });
 
         // 5. (Optional) Reissue token
-        const payload = {
-            id: user.id,
-            name: user.name,
-            email: user.email,
-            avatar: user.avatar,
-            isAdmin: user.isAdmin,
-        };
+        const payload = setSessionCookie(res, user);
+        return res.json({ message: "Đổi mật khẩu thành công", user: payload });
 
-        const jwtToken = jwt.sign(payload, process.env.JWT_SECRET, { expiresIn: "1h" });
-
-        res.cookie("token", jwtToken, {
-            httpOnly: true,
-            secure: process.env.NODE_ENV === "production",
-            sameSite: process.env.NODE_ENV === "production" ? "None" : "Lax",
-            domain: process.env.NODE_ENV === "production" ? ".findcation.vn" : undefined,
-            maxAge: 24 * 60 * 60 * 1000,
-        });
-
-        return res.json({ message: "Đổi mật khẩu thành công", user: payload, token: jwtToken });
 
     } catch (err) {
         console.error("Error during password change:", err.name, err.message);
